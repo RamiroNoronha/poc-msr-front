@@ -11,7 +11,7 @@ src/
     analysis-dashboard/
       hooks/ store/ utils/ views/components/
   shared/                      # código sem conhecimento de domínio
-    api/ components/ hooks/ store/ utils/
+    api/ components/ hooks/ store/ styles/ utils/
 ```
 
 ## Regras
@@ -21,3 +21,4 @@ src/
 - `shared` não conhece análise, repositório, GitHub, Truck Factor ou regras de negócio.
 - Estado local permanece na feature; `shared/store` contém apenas primitivas reutilizáveis.
 - O cliente HTTP é compartilhado; chamadas específicas do domínio ficam na feature correspondente.
+- Estilos são implementados com Emotion. Estilos globais ficam em `shared/styles`; estilos de uma tela ou componente ficam no próprio arquivo da feature.
