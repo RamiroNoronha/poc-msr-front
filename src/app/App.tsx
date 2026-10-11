@@ -1,9 +1,9 @@
 import { useState } from 'react'
+import { AnalysisDashboardView } from '../features/analysis-dashboard'
 import { useAnalyzeRepository } from '../features/analyze-repository/hooks/useAnalyzeRepository'
 import { AnalyzeRepositoryView } from '../features/analyze-repository/views/AnalyzeRepositoryView'
 import { useDevelopersReview } from '../features/review-developers/hooks/useDevelopersReview'
 import { ReviewDevelopersView } from '../features/review-developers/views/ReviewDevelopersView'
-import { RepositoryDetailsView } from '../features/repository-details/views/RepositoryDetailsView'
 import { PageContainer } from '../shared/components/PageContainer'
 import { GlobalStyles } from '../shared/styles/GlobalStyles'
 
@@ -59,7 +59,7 @@ export function App() {
           <ReviewDevelopersView key={review.repositoryUrl} onBack={() => changeScreen('home')} onConfirm={handleConfirm} review={review} />
         ) : null}
         {analysis && screen === 'details' ? (
-          <RepositoryDetailsView
+          <AnalysisDashboardView
             key={analysis.mining.repo_analyzed}
             keyDevelopers={analysis.truckFactor.key_developers}
             onBack={() => changeScreen('home')}

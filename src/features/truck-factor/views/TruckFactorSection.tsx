@@ -1,43 +1,27 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
+import { ExpandButton } from '../../../shared/components/ExpandButton'
+import { useExpandable } from '../../../shared/hooks/useExpandable'
+import { expandedOverlay } from '../../../shared/styles/expandable'
 import { assignDeveloperColors, OTHERS_COLOR, SELECTED_OTHER_COLOR } from '../utils/developerColors'
 import { buildOwnership, isSoloFile, selectFileColors, summarizeDevelopers, type CollaborationMode } from '../utils/ownership'
 import { collectFiles, type FileNode } from '../utils/tree'
-import { CirclePackChart } from './components/CirclePackChart'
 import { DeveloperLegend } from './components/DeveloperLegend'
 import { KnowledgeSilos } from './components/KnowledgeSilos'
+import { OwnershipCircles } from './components/OwnershipCircles'
 
-type RepositoryDetailsViewProps = {
+type TruckFactorSectionProps = {
   keyDevelopers: string[]
-  onBack: () => void
-  title: string
   tree: FileNode
 }
 
-export function RepositoryDetailsView({ keyDevelopers, onBack, title, tree }: RepositoryDetailsViewProps) {
+export function TruckFactorSection({ keyDevelopers, tree }: TruckFactorSectionProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const [mode, setMode] = useState<CollaborationMode>('collaborated')
   const [soloOnly, setSoloOnly] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(false)
+  const { isExpanded, toggle } = useExpandable()
   const [focusPath, setFocusPath] = useState('')
   const chartRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    if (!isExpanded) return
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setIsExpanded(false)
-    }
-
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [isExpanded])
 
   const files = useMemo(() => collectFiles(tree), [tree])
   const ownership = useMemo(() => buildOwnership(files), [files])
@@ -55,14 +39,14 @@ export function RepositoryDetailsView({ keyDevelopers, onBack, title, tree }: Re
   }
 
   return (
-    <Page>
-      <Header>
-        <BackButton onClick={onBack} type="button">← Voltar</BackButton>
-        <div>
-          <h1>{title}</h1>
-          <p>Cada círculo é um arquivo (tamanho = linhas de código), agrupado dentro das pastas que o contêm.</p>
-        </div>
-      </Header>
+    <Section>
+      <SectionHeader>
+        <h2>Truck Factor</h2>
+        <p>
+          Cada círculo é um arquivo (tamanho = linhas de código), agrupado dentro das pastas que o contêm. Escolha um desenvolvedor para ver os arquivos
+          em que ele atuou e onde o conhecimento está concentrado em uma pessoa só.
+        </p>
+      </SectionHeader>
 
       {files.length === 0 ? (
         <Empty>Nenhum arquivo foi encontrado no histórico deste repositório.</Empty>
@@ -70,10 +54,8 @@ export function RepositoryDetailsView({ keyDevelopers, onBack, title, tree }: Re
         <>
         <Layout data-expanded={isExpanded || undefined}>
           <ChartCard ref={chartRef}>
-            <ExpandButton aria-label={isExpanded ? 'Sair da tela cheia' : 'Ver em tela cheia'} onClick={() => setIsExpanded((current) => !current)} title={isExpanded ? 'Sair (Esc)' : 'Tela cheia'} type="button">
-              {isExpanded ? '✕ Sair' : '⤢ Tela cheia'}
-            </ExpandButton>
-            <CirclePackChart dimUncolored={selected !== null || soloOnly} fileColors={fileColors} focusPath={focusPath} onFocusChange={setFocusPath} ownership={ownership} tree={tree} />
+            <ExpandButton isExpanded={isExpanded} onToggle={toggle} />
+            <OwnershipCircles dimUncolored={selected !== null || soloOnly} fileColors={fileColors} focusPath={focusPath} onFocusChange={setFocusPath} ownership={ownership} tree={tree} />
           </ChartCard>
           <DeveloperLegend
             colors={colors}
@@ -91,34 +73,18 @@ export function RepositoryDetailsView({ keyDevelopers, onBack, title, tree }: Re
         <KnowledgeSilos colors={colors} onSelectFile={showFileInChart} soloFiles={soloFiles} totalFiles={files.length} />
         </>
       )}
-    </Page>
+    </Section>
   )
 }
 
-const Page = styled.main`
+const Section = styled.section`
   display: grid;
   gap: 1.5rem;
-  padding-top: 2rem;
 `
 
-const Header = styled.header`
-  display: grid;
-  gap: 1rem;
-  justify-items: start;
-
-  h1 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.25rem); letter-spacing: -0.03em; word-break: break-word; }
-  p { margin: 0.4rem 0 0; color: var(--text-muted); }
-`
-
-const BackButton = styled.button`
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--text);
-  background: var(--surface);
-  cursor: pointer;
-
-  &:hover { background: var(--surface-strong); }
+const SectionHeader = styled.header`
+  h2 { margin: 0; font-size: 1.5rem; letter-spacing: -0.02em; }
+  p { max-width: 52rem; margin: 0.5rem 0 0; color: var(--text-muted); line-height: 1.6; }
 `
 
 const Layout = styled.div`
@@ -132,14 +98,7 @@ const Layout = styled.div`
   }
 
   &[data-expanded] {
-    --chart-max-height: calc(100vh - 9rem);
-    position: fixed;
-    inset: 0;
-    z-index: 10;
-    align-content: start;
-    padding: 1.5rem;
-    overflow: auto;
-    background: var(--bg);
+    ${expandedOverlay}
   }
 `
 
@@ -149,23 +108,6 @@ const ChartCard = styled.section`
   border: 1px solid var(--border);
   border-radius: 1.25rem;
   background: var(--surface);
-`
-
-const ExpandButton = styled.button`
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1;
-  padding: 0.4rem 0.8rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--text);
-  background: var(--surface-strong);
-  font-size: 0.8125rem;
-  cursor: pointer;
-  backdrop-filter: blur(8px);
-
-  &:hover { border-color: rgba(124, 92, 255, 0.6); }
 `
 
 const Empty = styled.p`
