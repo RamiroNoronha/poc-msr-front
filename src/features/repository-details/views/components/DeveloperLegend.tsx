@@ -1,13 +1,19 @@
+import { useState } from 'react'
 import styled from '@emotion/styled'
-import { developerColor } from '../../utils/developerColors'
-import type { CollaborationMode, DeveloperActivity } from '../../utils/ownership'
+import { OTHERS_COLOR } from '../../utils/developerColors'
+import type { CollaborationMode, DeveloperSummary } from '../../utils/ownership'
 
 type DeveloperLegendProps = {
-  activity: DeveloperActivity[]
+  colors: Map<string, string>
+  developers: DeveloperSummary[]
+  keyDevelopers: string[]
   mode: CollaborationMode
   onModeChange: (mode: CollaborationMode) => void
   onSelect: (developer: string | null) => void
+  onSoloOnlyChange: (soloOnly: boolean) => void
   selected: string | null
+  soloFileCount: number
+  soloOnly: boolean
 }
 
 const MODES: { label: string; value: CollaborationMode }[] = [
@@ -15,52 +21,65 @@ const MODES: { label: string; value: CollaborationMode }[] = [
   { label: 'É o principal autor do arquivo', value: 'main' },
 ]
 
-function describe({ revisions, status }: DeveloperActivity) {
-  if (status === 'loading') return 'Carregando…'
-  if (status === 'error') return 'Falha ao carregar'
-  return `${revisions.size.toLocaleString('pt-BR')} arquivos`
-}
+export function DeveloperLegend({ colors, developers, keyDevelopers, mode, onModeChange, onSelect, onSoloOnlyChange, selected, soloFileCount, soloOnly }: DeveloperLegendProps) {
+  const [query, setQuery] = useState('')
+  const normalizedQuery = query.trim().toLowerCase()
+  const filtered = normalizedQuery ? developers.filter((developer) => developer.name.toLowerCase().includes(normalizedQuery)) : developers
+  const hasOthers = developers.length > colors.size
 
-export function DeveloperLegend({ activity, mode, onModeChange, onSelect, selected }: DeveloperLegendProps) {
   return (
     <Panel>
       <Section>
-        <h2>Key developers</h2>
-        {activity.length === 0 ? (
-          <Hint>Nenhum key developer foi identificado neste repositório.</Hint>
+        <h2>Desenvolvedores ({developers.length})</h2>
+        {developers.length === 0 ? (
+          <Hint>Nenhum desenvolvedor foi identificado neste repositório.</Hint>
         ) : (
           <>
+            {developers.length > 8 ? (
+              <Search aria-label="Buscar desenvolvedor" onChange={(event) => setQuery(event.target.value)} placeholder="Buscar desenvolvedor…" type="search" value={query} />
+            ) : null}
             <List>
-              {activity.map((item, index) => (
-                <li key={item.developer}>
-                  <Developer aria-pressed={selected === item.developer} disabled={item.status !== 'ready'} onClick={() => onSelect(selected === item.developer ? null : item.developer)} type="button">
-                    <Swatch style={{ background: developerColor(index) }} />
+              {filtered.map((developer) => (
+                <li key={developer.name}>
+                  <Developer aria-pressed={selected === developer.name} onClick={() => onSelect(selected === developer.name ? null : developer.name)} type="button">
+                    <Swatch style={{ background: colors.get(developer.name) ?? OTHERS_COLOR }} />
                     <span>
-                      <strong>{item.developer}</strong>
-                      <small>{describe(item)}</small>
+                      <strong>
+                        {developer.name}
+                        {keyDevelopers.includes(developer.name) ? <Badge>key</Badge> : null}
+                      </strong>
+                      <small>
+                        {developer.files.toLocaleString('pt-BR')} arquivos · {developer.soloFiles.toLocaleString('pt-BR')} só dele
+                      </small>
                     </span>
                   </Developer>
                 </li>
               ))}
+              {filtered.length === 0 ? <Hint>Nenhum desenvolvedor encontrado.</Hint> : null}
             </List>
             <Hint>
-              {selected
-                ? 'Clique de novo no desenvolvedor para limpar a seleção.'
-                : 'Sem seleção, cada arquivo usa a cor do key developer que mais o alterou.'}
+              {selected ? 'Clique de novo no desenvolvedor para limpar a seleção.' : 'Sem seleção, cada arquivo usa a cor do desenvolvedor que mais o alterou.'}
+              {hasOthers ? ' Os demais desenvolvedores aparecem em cinza.' : ''}
             </Hint>
           </>
         )}
       </Section>
 
-      <Filter disabled={selected === null}>
-        <legend>Destacar arquivos em que o desenvolvedor</legend>
-        {MODES.map((option) => (
-          <label key={option.value}>
-            <input checked={mode === option.value} name="collaboration-mode" onChange={() => onModeChange(option.value)} type="radio" />
-            {option.label}
-          </label>
-        ))}
-      </Filter>
+      <Filters>
+        <Filter disabled={selected === null}>
+          <legend>Destacar arquivos em que o desenvolvedor</legend>
+          {MODES.map((option) => (
+            <label key={option.value}>
+              <input checked={mode === option.value} name="collaboration-mode" onChange={() => onModeChange(option.value)} type="radio" />
+              {option.label}
+            </label>
+          ))}
+        </Filter>
+        <label>
+          <input checked={soloOnly} onChange={(event) => onSoloOnlyChange(event.target.checked)} type="checkbox" />
+          Só arquivos com 1 colaborador ({soloFileCount.toLocaleString('pt-BR')})
+        </label>
+      </Filters>
     </Panel>
   )
 }
@@ -81,11 +100,24 @@ const Section = styled.section`
   h2 { margin: 0; font-size: 1.05rem; }
 `
 
+const Search = styled.input`
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  color: var(--text);
+  background: var(--surface);
+  font-size: 0.875rem;
+
+  &::placeholder { color: var(--text-muted); }
+`
+
 const List = styled.ul`
   display: grid;
   gap: 0.5rem;
+  max-height: 22rem;
   margin: 0;
-  padding: 0;
+  padding: 0 0.25rem 0 0;
+  overflow-y: auto;
   list-style: none;
 `
 
@@ -103,9 +135,8 @@ const Developer = styled.button`
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 
-  &:hover:not(:disabled) { background: var(--surface-strong); }
+  &:hover { background: var(--surface-strong); }
   &[aria-pressed='true'] { border-color: rgba(124, 92, 255, 0.7); background: rgba(124, 92, 255, 0.14); }
-  &:disabled { cursor: default; opacity: 0.6; }
 
   span:last-of-type { display: grid; min-width: 0; }
   strong { overflow: hidden; font-size: 0.9rem; text-overflow: ellipsis; white-space: nowrap; }
@@ -119,6 +150,17 @@ const Swatch = styled.span`
   border-radius: 50%;
 `
 
+const Badge = styled.em`
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid rgba(124, 92, 255, 0.5);
+  border-radius: 999px;
+  color: #c4b5fd;
+  font-size: 0.65rem;
+  font-style: normal;
+  font-weight: 600;
+`
+
 const Hint = styled.p`
   margin: 0;
   color: var(--text-muted);
@@ -126,18 +168,25 @@ const Hint = styled.p`
   line-height: 1.5;
 `
 
+const Filters = styled.div`
+  display: grid;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.875rem;
+
+  label { display: flex; align-items: center; gap: 0.6rem; cursor: pointer; }
+  input { accent-color: var(--accent); }
+`
+
 const Filter = styled.fieldset`
   display: grid;
   gap: 0.6rem;
   margin: 0;
-  padding: 1rem 0 0;
+  padding: 0;
   border: 0;
-  border-top: 1px solid var(--border);
-  font-size: 0.875rem;
 
-  legend { padding: 0 0.5rem 0 0; color: var(--text-muted); font-size: 0.8125rem; }
-  label { display: flex; align-items: center; gap: 0.6rem; cursor: pointer; }
-  input { accent-color: var(--accent); }
+  legend { padding: 0 0 0.6rem; color: var(--text-muted); font-size: 0.8125rem; }
   &:disabled { opacity: 0.5; }
   &:disabled label { cursor: default; }
 `

@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useState } from 'react'
-import { analyzeRepository, type RepositoryAnalysis } from '../api/analyzeRepository'
+import { analyzeRepository, type DeveloperGroups, type RepositoryAnalysis } from '../api/analyzeRepository'
 
 const fallbackMessage = 'Não foi possível analisar o repositório.'
 
@@ -18,13 +18,17 @@ export function useAnalyzeRepository() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  async function submit(repositoryUrl: string) {
+  function reset() {
     setAnalysis(null)
     setError(null)
+  }
+
+  async function submit(repositoryUrl: string, groups: DeveloperGroups = []) {
+    reset()
     setIsLoading(true)
 
     try {
-      const result = await analyzeRepository(repositoryUrl)
+      const result = await analyzeRepository(repositoryUrl, groups)
       setAnalysis(result)
     } catch (requestError) {
       setError(getErrorMessage(requestError))
@@ -33,5 +37,5 @@ export function useAnalyzeRepository() {
     }
   }
 
-  return { analysis, error, isLoading, submit }
+  return { analysis, error, isLoading, reset, submit }
 }

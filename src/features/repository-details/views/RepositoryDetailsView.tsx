@@ -1,25 +1,26 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
-import { useDeveloperActivity } from '../hooks/useDeveloperActivity'
-import { developerColor } from '../utils/developerColors'
-import { buildOwnership, selectFileColors, type CollaborationMode } from '../utils/ownership'
-import type { FileNode } from '../utils/tree'
+import { assignDeveloperColors, OTHERS_COLOR, SELECTED_OTHER_COLOR } from '../utils/developerColors'
+import { buildOwnership, isSoloFile, selectFileColors, summarizeDevelopers, type CollaborationMode } from '../utils/ownership'
+import { collectFiles, type FileNode } from '../utils/tree'
 import { CirclePackChart } from './components/CirclePackChart'
 import { DeveloperLegend } from './components/DeveloperLegend'
+import { KnowledgeSilos } from './components/KnowledgeSilos'
 
 type RepositoryDetailsViewProps = {
-  developers: string[]
+  keyDevelopers: string[]
   onBack: () => void
-  repositoryUrl: string
   title: string
   tree: FileNode
 }
 
-export function RepositoryDetailsView({ developers, onBack, repositoryUrl, title, tree }: RepositoryDetailsViewProps) {
-  const activity = useDeveloperActivity(repositoryUrl, developers)
+export function RepositoryDetailsView({ keyDevelopers, onBack, title, tree }: RepositoryDetailsViewProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const [mode, setMode] = useState<CollaborationMode>('collaborated')
+  const [soloOnly, setSoloOnly] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+  const [focusPath, setFocusPath] = useState('')
+  const chartRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     if (!isExpanded) return
@@ -38,11 +39,20 @@ export function RepositoryDetailsView({ developers, onBack, repositoryUrl, title
     }
   }, [isExpanded])
 
-  const ownership = useMemo(() => buildOwnership(activity), [activity])
+  const files = useMemo(() => collectFiles(tree), [tree])
+  const ownership = useMemo(() => buildOwnership(files), [files])
+  const developers = useMemo(() => summarizeDevelopers(files), [files])
+  const soloFiles = useMemo(() => files.filter(isSoloFile), [files])
+  const colors = useMemo(() => assignDeveloperColors(developers.map((developer) => developer.name)), [developers])
   const fileColors = useMemo(() => {
-    const colorOf = (developer: string) => developerColor(developers.indexOf(developer))
-    return selectFileColors(ownership, colorOf, selected, mode)
-  }, [developers, mode, ownership, selected])
+    const colorOf = (developer: string) => colors.get(developer) ?? (developer === selected ? SELECTED_OTHER_COLOR : OTHERS_COLOR)
+    return selectFileColors(ownership, colorOf, selected, mode, soloOnly)
+  }, [colors, mode, ownership, selected, soloOnly])
+
+  function showFileInChart(path: string) {
+    setFocusPath(path)
+    chartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
 
   return (
     <Page>
@@ -54,18 +64,32 @@ export function RepositoryDetailsView({ developers, onBack, repositoryUrl, title
         </div>
       </Header>
 
-      {(tree.children?.length ?? 0) === 0 ? (
+      {files.length === 0 ? (
         <Empty>Nenhum arquivo foi encontrado no histórico deste repositório.</Empty>
       ) : (
+        <>
         <Layout data-expanded={isExpanded || undefined}>
-          <ChartCard>
+          <ChartCard ref={chartRef}>
             <ExpandButton aria-label={isExpanded ? 'Sair da tela cheia' : 'Ver em tela cheia'} onClick={() => setIsExpanded((current) => !current)} title={isExpanded ? 'Sair (Esc)' : 'Tela cheia'} type="button">
               {isExpanded ? '✕ Sair' : '⤢ Tela cheia'}
             </ExpandButton>
-            <CirclePackChart dimUncolored={selected !== null} fileColors={fileColors} ownership={ownership} tree={tree} />
+            <CirclePackChart dimUncolored={selected !== null || soloOnly} fileColors={fileColors} focusPath={focusPath} onFocusChange={setFocusPath} ownership={ownership} tree={tree} />
           </ChartCard>
-          <DeveloperLegend activity={activity} mode={mode} onModeChange={setMode} onSelect={setSelected} selected={selected} />
+          <DeveloperLegend
+            colors={colors}
+            developers={developers}
+            keyDevelopers={keyDevelopers}
+            mode={mode}
+            onModeChange={setMode}
+            onSelect={setSelected}
+            onSoloOnlyChange={setSoloOnly}
+            selected={selected}
+            soloFileCount={soloFiles.length}
+            soloOnly={soloOnly}
+          />
         </Layout>
+        <KnowledgeSilos colors={colors} onSelectFile={showFileInChart} soloFiles={soloFiles} totalFiles={files.length} />
+        </>
       )}
     </Page>
   )
