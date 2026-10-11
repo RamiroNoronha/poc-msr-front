@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { useDeveloperActivity } from '../hooks/useDeveloperActivity'
 import { developerColor } from '../utils/developerColors'
@@ -19,6 +19,24 @@ export function RepositoryDetailsView({ developers, onBack, repositoryUrl, title
   const activity = useDeveloperActivity(repositoryUrl, developers)
   const [selected, setSelected] = useState<string | null>(null)
   const [mode, setMode] = useState<CollaborationMode>('collaborated')
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  useEffect(() => {
+    if (!isExpanded) return
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setIsExpanded(false)
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isExpanded])
 
   const ownership = useMemo(() => buildOwnership(activity), [activity])
   const fileColors = useMemo(() => {
@@ -39,8 +57,11 @@ export function RepositoryDetailsView({ developers, onBack, repositoryUrl, title
       {(tree.children?.length ?? 0) === 0 ? (
         <Empty>Nenhum arquivo foi encontrado no histórico deste repositório.</Empty>
       ) : (
-        <Layout>
+        <Layout data-expanded={isExpanded || undefined}>
           <ChartCard>
+            <ExpandButton aria-label={isExpanded ? 'Sair da tela cheia' : 'Ver em tela cheia'} onClick={() => setIsExpanded((current) => !current)} title={isExpanded ? 'Sair (Esc)' : 'Tela cheia'} type="button">
+              {isExpanded ? '✕ Sair' : '⤢ Tela cheia'}
+            </ExpandButton>
             <CirclePackChart dimUncolored={selected !== null} fileColors={fileColors} ownership={ownership} tree={tree} />
           </ChartCard>
           <DeveloperLegend activity={activity} mode={mode} onModeChange={setMode} onSelect={setSelected} selected={selected} />
@@ -85,13 +106,42 @@ const Layout = styled.div`
   @media (max-width: 60rem) {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  &[data-expanded] {
+    --chart-max-height: calc(100vh - 9rem);
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    align-content: start;
+    padding: 1.5rem;
+    overflow: auto;
+    background: var(--bg);
+  }
 `
 
 const ChartCard = styled.section`
+  position: relative;
   padding: 1rem;
   border: 1px solid var(--border);
   border-radius: 1.25rem;
   background: var(--surface);
+`
+
+const ExpandButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  background: var(--surface-strong);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+
+  &:hover { border-color: rgba(124, 92, 255, 0.6); }
 `
 
 const Empty = styled.p`
