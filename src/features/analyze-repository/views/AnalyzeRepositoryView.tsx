@@ -1,5 +1,5 @@
 import styled from '@emotion/styled'
-import { useAnalyzeRepository } from '../hooks/useAnalyzeRepository'
+import type { RepositoryAnalysis } from '../api/analyzeRepository'
 import { useRepositoryUrl } from '../hooks/useRepositoryUrl'
 import { AnalysisSummary } from './components/AnalysisSummary'
 import { ExampleRepositories } from './components/ExampleRepositories'
@@ -11,13 +11,20 @@ const FEATURES = [
   { title: 'Autoria', text: 'Quem domina cada parte do código, extraído direto do histórico Git.' },
 ]
 
-export function AnalyzeRepositoryView() {
+type AnalyzeRepositoryViewProps = {
+  analysis: RepositoryAnalysis | null
+  error: string | null
+  isLoading: boolean
+  onShowDetails: () => void
+  onSubmit: (repositoryUrl: string) => void
+}
+
+export function AnalyzeRepositoryView({ analysis, error: requestError, isLoading, onShowDetails, onSubmit }: AnalyzeRepositoryViewProps) {
   const { error, repositoryUrl, setRepositoryUrl, validate } = useRepositoryUrl()
-  const { analysis, error: requestError, isLoading, submit } = useAnalyzeRepository()
 
   function handleSubmit() {
     const normalizedUrl = validate()
-    if (normalizedUrl) void submit(normalizedUrl)
+    if (normalizedUrl) onSubmit(normalizedUrl)
   }
 
   return (
@@ -31,7 +38,12 @@ export function AnalyzeRepositoryView() {
         <Description>Cole a URL de um repositório do GitHub e veja Truck Factor, hotspots e concentração de autoria em segundos.</Description>
         <RepositoryUrlForm error={error ?? requestError} isLoading={isLoading} onChange={setRepositoryUrl} onSubmit={handleSubmit} value={repositoryUrl} />
         <ExampleRepositories disabled={isLoading} onSelect={setRepositoryUrl} />
-        {analysis ? <AnalysisSummary analysis={analysis} /> : null}
+        {analysis ? (
+          <>
+            <AnalysisSummary analysis={analysis} />
+            <DetailsButton onClick={onShowDetails} type="button">Clique aqui para ver mais detalhes →</DetailsButton>
+          </>
+        ) : null}
       </Hero>
       {!analysis ? (
         <Features>
@@ -107,6 +119,20 @@ const Description = styled.p`
   color: var(--text-muted);
   font-size: 1.125rem;
   line-height: 1.6;
+`
+
+const DetailsButton = styled.button`
+  margin-top: 1.5rem;
+  padding: 0.9rem 1.6rem;
+  border: 0;
+  border-radius: 0.8rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), #5b8cff);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, filter 0.15s;
+
+  &:hover { filter: brightness(1.1); transform: translateY(-1px); }
 `
 
 const Features = styled.section`
