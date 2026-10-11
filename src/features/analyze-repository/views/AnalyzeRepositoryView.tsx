@@ -1,60 +1,126 @@
-import { useState } from 'react'
 import styled from '@emotion/styled'
+import { useAnalyzeRepository } from '../hooks/useAnalyzeRepository'
 import { useRepositoryUrl } from '../hooks/useRepositoryUrl'
+import { AnalysisSummary } from './components/AnalysisSummary'
+import { ExampleRepositories } from './components/ExampleRepositories'
 import { RepositoryUrlForm } from './components/RepositoryUrlForm'
+
+const FEATURES = [
+  { title: 'Truck Factor', text: 'Quantas pessoas precisam sair para o projeto perder o conhecimento crítico.' },
+  { title: 'Hotspots', text: 'Arquivos com mais revisões e maior concentração de mudanças no histórico.' },
+  { title: 'Autoria', text: 'Quem domina cada parte do código, extraído direto do histórico Git.' },
+]
 
 export function AnalyzeRepositoryView() {
   const { error, repositoryUrl, setRepositoryUrl, validate } = useRepositoryUrl()
-  const [submittedRepository, setSubmittedRepository] = useState<string | null>(null)
+  const { analysis, error: requestError, isLoading, submit } = useAnalyzeRepository()
 
   function handleSubmit() {
     const normalizedUrl = validate()
-    if (normalizedUrl) setSubmittedRepository(normalizedUrl)
+    if (normalizedUrl) void submit(normalizedUrl)
   }
 
   return (
-    <Content>
-      <Eyebrow>POC-MSR</Eyebrow>
-      <h1>Entenda o risco de conhecimento no seu repositório.</h1>
-      <Description>Analise hotspots, Truck Factor e concentração de autoria a partir do histórico Git.</Description>
-      <RepositoryUrlForm error={error} onChange={setRepositoryUrl} onSubmit={handleSubmit} value={repositoryUrl} />
-      {submittedRepository ? <Result>Repositório pronto para análise: {submittedRepository}</Result> : null}
-    </Content>
+    <>
+      <Nav>
+        <Brand><Logo aria-hidden="true" />POC-MSR</Brand>
+      </Nav>
+      <Hero>
+        <Badge>Mining Software Repositories</Badge>
+        <h1>Descubra o <em>risco de conhecimento</em> do seu repositório.</h1>
+        <Description>Cole a URL de um repositório do GitHub e veja Truck Factor, hotspots e concentração de autoria em segundos.</Description>
+        <RepositoryUrlForm error={error ?? requestError} isLoading={isLoading} onChange={setRepositoryUrl} onSubmit={handleSubmit} value={repositoryUrl} />
+        <ExampleRepositories disabled={isLoading} onSelect={setRepositoryUrl} />
+        {analysis ? <AnalysisSummary analysis={analysis} /> : null}
+      </Hero>
+      {!analysis ? (
+        <Features>
+          {FEATURES.map((feature) => (
+            <Feature key={feature.title}>
+              <h2>{feature.title}</h2>
+              <p>{feature.text}</p>
+            </Feature>
+          ))}
+        </Features>
+      ) : null}
+    </>
   )
 }
 
-const Content = styled.main`
-  padding: clamp(2rem, 8vw, 7rem);
-  border: 1px solid #e1e6ef;
-  border-radius: 1rem;
-  background: #ffffff;
+const Nav = styled.nav`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`
+
+const Brand = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+`
+
+const Logo = styled.span`
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.45rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+`
+
+const Hero = styled.main`
+  padding: clamp(3rem, 9vw, 7rem) 0 3rem;
+  text-align: center;
 
   h1 {
-    max-width: 16ch;
-    margin: 0;
-    font-size: clamp(2.25rem, 5vw, 4.5rem);
+    max-width: 18ch;
+    margin: 1.25rem auto 0;
+    font-size: clamp(2.25rem, 6vw, 4.5rem);
+    font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.04em;
   }
+
+  em {
+    font-style: normal;
+    background: linear-gradient(120deg, #a78bfa, var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 `
 
-const Eyebrow = styled.p`
-  margin: 0 0 1rem;
-  color: #1f3b74;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+const Badge = styled.span`
+  display: inline-block;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid rgba(124, 92, 255, 0.4);
+  border-radius: 999px;
+  color: #c4b5fd;
+  background: rgba(124, 92, 255, 0.12);
+  font-size: 0.8125rem;
+  font-weight: 600;
 `
 
 const Description = styled.p`
-  max-width: 42rem;
-  margin: 1.5rem 0 0;
-  color: #526078;
+  max-width: 38rem;
+  margin: 1.5rem auto 0;
+  color: var(--text-muted);
   font-size: 1.125rem;
   line-height: 1.6;
 `
 
-const Result = styled.p`
-  margin: 1rem 0 0;
-  color: #1f3b74;
-  font-weight: 600;
+const Features = styled.section`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+`
+
+const Feature = styled.article`
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--surface);
+
+  h2 { margin: 0; font-size: 1.05rem; }
+  p { margin: 0.6rem 0 0; color: var(--text-muted); line-height: 1.55; }
 `
