@@ -22,3 +22,8 @@ src/
 - Estado local permanece na feature; `shared/store` contém apenas primitivas reutilizáveis.
 - O cliente HTTP é compartilhado; chamadas específicas do domínio ficam na feature correspondente.
 - Estilos são implementados com Emotion. Estilos globais ficam em `shared/styles`; estilos de uma tela ou componente ficam no próprio arquivo da feature.
+
+## Ambiente e API
+
+- Copie `.env.example` para `.env` para configurar `VITE_API_BASE_URL` localmente. O `.env` não é versionado.
+- `shared/api/apiClient.ts` concentra a instância Axios. Cada feature expõe suas próprias chamadas e contratos em `api/`.
