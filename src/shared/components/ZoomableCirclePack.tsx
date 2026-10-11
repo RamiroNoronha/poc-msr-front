@@ -1,34 +1,45 @@
-import { useMemo, useState, type MouseEvent } from 'react'
+import { useMemo, useState, type MouseEvent, type ReactNode } from 'react'
 import styled from '@emotion/styled'
 import { hierarchy, pack, type HierarchyCircularNode } from 'd3-hierarchy'
-import { useAnimatedView } from '../../hooks/useAnimatedView'
-import type { FileOwnership } from '../../utils/ownership'
-import { getNodePath, type FileNode } from '../../utils/tree'
+import { useAnimatedView } from '../hooks/useAnimatedView'
 
 const SIZE = 800
-const NEUTRAL = '#3b4766'
 const CHAR_WIDTH = 6.6
-const MAX_LISTED_COLLABORATORS = 6
+const DEFAULT_HINT = 'Clique em um círculo para dar zoom e clique fora dele para voltar.'
 
-type CircleNode = HierarchyCircularNode<FileNode>
-
-type CirclePackChartProps = {
-  dimUncolored: boolean
-  fileColors: Map<string, string>
-  focusPath: string
-  onFocusChange: (path: string) => void
-  ownership: Map<string, FileOwnership>
-  tree: FileNode
+export type CircleTreeNode = {
+  children?: CircleTreeNode[]
+  name: string
 }
 
-type Hovered = {
-  collaborators: string[]
-  files?: number
-  kind: 'file' | 'folder'
-  lines: number
+export type CircleLeafAppearance = {
+  color: string
+  opacity?: number
+}
+
+export type CircleLeafSelection<T> = {
+  node: T
   path: string
-  revisions?: number
+  value: number
 }
+
+type Hovered<T> =
+  | ({ kind: 'file' } & CircleLeafSelection<T>)
+  | { files: number; kind: 'folder'; path: string; value: number }
+
+type ZoomableCirclePackProps<T extends CircleTreeNode> = {
+  // Linhas extras exibidas nos detalhes de uma folha, abaixo do caminho e do valor.
+  describeLeaf?: (leaf: CircleLeafSelection<T>) => ReactNode
+  focusPath?: string
+  getLeafAppearance: (path: string, leaf: T) => CircleLeafAppearance
+  getValue: (leaf: T) => number
+  hint?: string
+  onFocusChange?: (path: string) => void
+  tree: T
+  valueUnit: string
+}
+
+type PackedNode<T> = HierarchyCircularNode<T>
 
 function truncate(text: string, width: number) {
   const maxChars = Math.floor(width / CHAR_WIDTH)
@@ -36,38 +47,45 @@ function truncate(text: string, width: number) {
   return text.length > maxChars ? `${text.slice(0, maxChars - 1)}…` : text
 }
 
-function describeCollaborators(collaborators: string[]) {
-  const shown = collaborators.slice(0, MAX_LISTED_COLLABORATORS).join(', ')
-  const rest = collaborators.length - MAX_LISTED_COLLABORATORS
-  const label = collaborators.length === 1 ? 'Colaborador' : `Colaboradores (${collaborators.length})`
-  return `${label}: ${shown}${rest > 0 ? ` e mais ${rest}` : ''}`
+function pathOf<T extends CircleTreeNode>(node: PackedNode<T>) {
+  return node.ancestors().reverse().slice(1).map((ancestor) => ancestor.data.name).join('/')
 }
 
-function pathOf(node: CircleNode) {
-  return getNodePath(node.ancestors().reverse().slice(1).map((ancestor) => ancestor.data.name))
-}
-
-export function CirclePackChart({ dimUncolored, fileColors, focusPath, onFocusChange, ownership, tree }: CirclePackChartProps) {
-  const [hovered, setHovered] = useState<Hovered | null>(null)
+// Circle packing com zoom: folhas são círculos (área = valor) aninhados nas pastas que as contêm.
+// O foco do zoom pode ser controlado de fora (focusPath/onFocusChange) ou ficar interno.
+export function ZoomableCirclePack<T extends CircleTreeNode>({
+  describeLeaf,
+  focusPath: controlledFocusPath,
+  getLeafAppearance,
+  getValue,
+  hint = DEFAULT_HINT,
+  onFocusChange,
+  tree,
+  valueUnit,
+}: ZoomableCirclePackProps<T>) {
+  const [hovered, setHovered] = useState<Hovered<T> | null>(null)
+  const [internalFocusPath, setInternalFocusPath] = useState('')
+  const focusPath = controlledFocusPath ?? internalFocusPath
+  const setFocusPath = onFocusChange ?? setInternalFocusPath
 
   const { byPath, nodes, root } = useMemo(() => {
     const hierarchyRoot = hierarchy(tree)
-      .sum((node) => (node.children ? 0 : Math.max(node.size ?? 0, 1)))
+      .sum((node) => (node.children ? 0 : Math.max(getValue(node), 1)))
       .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
-    const packed = pack<FileNode>().size([SIZE, SIZE]).padding(4)(hierarchyRoot)
+    const packed = pack<T>().size([SIZE, SIZE]).padding(4)(hierarchyRoot)
     const items = packed.descendants().map((node) => ({ node, path: pathOf(node) }))
 
     return { byPath: new Map(items.map((item) => [item.path, item.node])), nodes: items, root: packed }
-  }, [tree])
+  }, [getValue, tree])
 
   const focus = byPath.get(focusPath) ?? root
   const view = useAnimatedView({ r: focus.r * 1.04, x: focus.x, y: focus.y })
   const scale = SIZE / (2 * view.r)
   const trail = focus.ancestors().reverse()
 
-  function focusOn(node: CircleNode) {
+  function focusOn(node: PackedNode<T>) {
     setHovered(null)
-    onFocusChange(pathOf(node))
+    setFocusPath(pathOf(node))
   }
 
   function zoomOut() {
@@ -75,7 +93,7 @@ export function CirclePackChart({ dimUncolored, fileColors, focusPath, onFocusCh
   }
 
   // Dentro do foco, o clique desce um nível: leva à filha do foco que contém o círculo clicado.
-  function handleClick(node: CircleNode) {
+  function handleClick(node: PackedNode<T>) {
     return (event: MouseEvent) => {
       const ancestors = node.ancestors()
       const focusIndex = ancestors.indexOf(focus)
@@ -108,7 +126,7 @@ export function CirclePackChart({ dimUncolored, fileColors, focusPath, onFocusCh
         {focus.parent ? <UpButton onClick={zoomOut} type="button">↑ Subir um nível</UpButton> : null}
       </Breadcrumb>
 
-      <Svg aria-label="Círculos aninhados: cada círculo é um arquivo, com área proporcional ao número de linhas, agrupados pelas pastas" onClick={zoomOut} role="img" viewBox={`0 0 ${SIZE} ${SIZE}`}>
+      <Svg aria-label="Círculos aninhados, agrupados pelas pastas" onClick={zoomOut} role="img" viewBox={`0 0 ${SIZE} ${SIZE}`}>
         {visible.map(({ cx, cy, inFocus, node, path, r }) => {
           const canZoom = inFocus && node !== focus
 
@@ -120,26 +138,25 @@ export function CirclePackChart({ dimUncolored, fileColors, focusPath, onFocusCh
                 data-zoomable={canZoom || undefined}
                 key={path || 'root'}
                 onClick={handleClick(node)}
-                onMouseEnter={() => setHovered({ collaborators: [], files: node.leaves().length, kind: 'folder', lines: node.value ?? 0, path: path || 'raiz do repositório' })}
+                onMouseEnter={() => setHovered({ files: node.leaves().length, kind: 'folder', path: path || 'raiz do repositório', value: node.value ?? 0 })}
                 onMouseLeave={() => setHovered(null)}
                 r={r}
               />
             )
           }
 
-          const color = fileColors.get(path)
-          const collaborators = ownership.get(path)?.collaborators ?? []
+          const { color, opacity = 1 } = getLeafAppearance(path, node.data)
           return (
             <Leaf
               cx={cx}
               cy={cy}
               data-zoomable={canZoom || undefined}
-              fill={color ?? NEUTRAL}
+              fill={color}
               key={path}
               onClick={handleClick(node)}
-              onMouseEnter={() => setHovered({ collaborators, kind: 'file', lines: node.data.size ?? 0, path, revisions: node.data.revisions ?? 0 })}
+              onMouseEnter={() => setHovered({ kind: 'file', node: node.data, path, value: getValue(node.data) })}
               onMouseLeave={() => setHovered(null)}
-              opacity={color ? 1 : dimUncolored ? 0.22 : 0.85}
+              opacity={opacity}
               r={r}
             />
           )
@@ -159,13 +176,13 @@ export function CirclePackChart({ dimUncolored, fileColors, focusPath, onFocusCh
           <>
             <strong>{hovered.kind === 'folder' ? `📁 ${hovered.path}` : hovered.path}</strong>
             <span>
-              {hovered.lines.toLocaleString('pt-BR')} linhas
-              {hovered.kind === 'folder' ? ` · ${hovered.files?.toLocaleString('pt-BR')} arquivos` : ` · ${hovered.revisions?.toLocaleString('pt-BR')} revisões`}
+              {hovered.value.toLocaleString('pt-BR')} {valueUnit}
+              {hovered.kind === 'folder' ? ` · ${hovered.files.toLocaleString('pt-BR')} arquivos` : ''}
             </span>
-            {hovered.kind === 'file' && hovered.collaborators.length > 0 ? <span>{describeCollaborators(hovered.collaborators)}</span> : null}
+            {hovered.kind === 'file' ? describeLeaf?.(hovered) : null}
           </>
         ) : (
-          <span>Clique em um círculo para dar zoom e clique fora dele para voltar. Quanto maior o círculo, mais linhas o arquivo tem.</span>
+          <span>{hint}</span>
         )}
       </Details>
     </Wrapper>
@@ -235,6 +252,9 @@ const Leaf = styled.circle`
 const Label = styled.text`
   fill: rgba(255, 255, 255, 0.92);
   font-size: 11px;
+  paint-order: stroke;
+  stroke: rgba(7, 9, 18, 0.55);
+  stroke-width: 2px;
   text-anchor: middle;
   dominant-baseline: middle;
   pointer-events: none;
