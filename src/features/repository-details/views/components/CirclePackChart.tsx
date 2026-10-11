@@ -105,7 +105,7 @@ const Wrapper = styled.div`
 const Svg = styled.svg`
   display: block;
   width: 100%;
-  max-height: 80vh;
+  max-height: var(--chart-max-height, 80vh);
   height: auto;
   border-radius: 1rem;
   background: rgba(0, 0, 0, 0.25);
