@@ -10,6 +10,7 @@ export type RepositoryInfo = {
 }
 
 export type D3Node = {
+  authors?: { name: string; revisions: number }[]
   children?: D3Node[]
   name: string
   revisions?: number
@@ -35,14 +36,17 @@ export type RepositoryAnalysis = {
   truckFactor: TruckFactorReport
 }
 
-export async function analyzeRepository(repositoryUrl: string): Promise<RepositoryAnalysis> {
+// Cada grupo lista os ids das identidades de commit que o usuário confirmou como a mesma pessoa.
+export type DeveloperGroups = string[][]
+
+export async function analyzeRepository(repositoryUrl: string, groups: DeveloperGroups = []): Promise<RepositoryAnalysis> {
   const repository = parseGitHubRepositoryUrl(repositoryUrl)
   if (!repository) throw new Error('A URL do repositório GitHub é inválida.')
 
   const [repositoryResult, miningResponse, truckFactorResponse] = await Promise.allSettled([
     apiClient.get<RepositoryInfo>(`/repo/${repository.owner}/${repository.repository}`),
-    apiClient.get<MiningReport>('/mining/report', { params: { repo_url: repositoryUrl } }),
-    apiClient.get<TruckFactorReport>('/analytics/report/truck-factor', { params: { repo_url: repositoryUrl } }),
+    apiClient.post<MiningReport>('/mining/report', { groups, repo_url: repositoryUrl }),
+    apiClient.post<TruckFactorReport>('/analytics/report/truck-factor', { groups, repo_url: repositoryUrl }),
   ])
 
   // Mineração e Truck Factor são essenciais; os dados do repositório são opcionais.
@@ -54,12 +58,4 @@ export async function analyzeRepository(repositoryUrl: string): Promise<Reposito
     repository: repositoryResult.status === 'fulfilled' ? repositoryResult.value.data : null,
     truckFactor: truckFactorResponse.value.data,
   }
-}
-
-export async function getAuthorMiningReport(repositoryUrl: string, author: string): Promise<MiningReport> {
-  const response = await apiClient.get<MiningReport>('/mining/report/author', {
-    params: { author, repo_url: repositoryUrl },
-  })
-
-  return response.data
 }
