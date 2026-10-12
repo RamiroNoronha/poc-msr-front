@@ -1,28 +1,29 @@
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
 import { ZoomableCirclePack } from '../../../../shared/components/ZoomableCirclePack'
 import { heatColor, heatGradient } from '../../utils/heatColor'
 import type { FileNode } from '../../utils/tree'
-
-const HINT = 'Clique em um círculo para dar zoom e clique fora dele para voltar. Círculos grandes e vermelhos são os hotspots.'
 
 const getLines = (file: FileNode) => file.size ?? 0
 const getAppearance = (_path: string, file: FileNode) => ({ color: heatColor(file.weight ?? 0) })
 
 export function HotspotChart({ tree }: { tree: FileNode }) {
+  const { t } = useTranslation('hotspot')
+
   return (
     <Wrapper>
       <ZoomableCirclePack
-        describeLeaf={({ node }) => <span>{(node.revisions ?? 0).toLocaleString('pt-BR')} revisões</span>}
+        describeLeaf={({ node }) => <span>{t('units.revisions', { count: node.revisions ?? 0 })}</span>}
+        formatValue={(value) => t('units.lines', { count: value })}
         getLeafAppearance={getAppearance}
         getValue={getLines}
-        hint={HINT}
+        hint={t('chart.hint')}
         tree={tree}
-        valueUnit="linhas"
       />
       <Legend>
-        <span>Poucas mudanças</span>
+        <span>{t('chart.legendLow')}</span>
         <Gradient />
-        <span>Muitas mudanças</span>
+        <span>{t('chart.legendHigh')}</span>
       </Legend>
     </Wrapper>
   )

@@ -1,5 +1,6 @@
 import { useDraggable } from '@dnd-kit/core'
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
 import type { Developer } from '../../api/developers'
 import { NEW_PERSON } from '../../utils/people'
 
@@ -15,32 +16,33 @@ type IdentityRowProps = {
 }
 
 export function IdentityRow({ canSeparate, developer, moveTargets, onMove, personId }: IdentityRowProps) {
+  const { t } = useTranslation('reviewDevelopers')
   const { attributes, isDragging, listeners, setNodeRef } = useDraggable({ id: `identity:${developer.id}` })
   const unified = moveTargets.unified.filter((target) => target.id !== personId)
   const singles = moveTargets.singles.filter((target) => target.id !== personId)
 
   return (
     <Row data-dragging={isDragging || undefined} ref={setNodeRef}>
-      <Handle {...attributes} {...listeners} aria-label={`Arrastar a identidade ${developer.name} (${developer.email})`} type="button">⋮⋮</Handle>
+      <Handle {...attributes} {...listeners} aria-label={t('identity.dragLabel', { email: developer.email, name: developer.name })} type="button">⋮⋮</Handle>
       <Info>
         <strong>{developer.name}</strong>
         <span>{developer.email}</span>
       </Info>
-      <Commits>{developer.commits.toLocaleString('pt-BR')} commits</Commits>
+      <Commits>{t('identity.commits', { count: developer.commits })}</Commits>
       <Move
-        aria-label={`Mover a identidade ${developer.name} (${developer.email}) para outra pessoa`}
+        aria-label={t('identity.moveLabel', { email: developer.email, name: developer.name })}
         onChange={(event) => { if (event.target.value) onMove(developer.id, event.target.value) }}
         value=""
       >
-        <option value="">Mover para…</option>
-        {canSeparate ? <option value={NEW_PERSON}>Nova pessoa</option> : null}
+        <option value="">{t('identity.moveTo')}</option>
+        {canSeparate ? <option value={NEW_PERSON}>{t('identity.newPerson')}</option> : null}
         {unified.length > 0 ? (
-          <optgroup label="Pessoas unidas">
+          <optgroup label={t('identity.unitedGroup')}>
             {unified.map((target) => <option key={target.id} value={target.id}>{target.label}</option>)}
           </optgroup>
         ) : null}
         {singles.length > 0 ? (
-          <optgroup label="Outras identidades">
+          <optgroup label={t('identity.otherGroup')}>
             {singles.map((target) => <option key={target.id} value={target.id}>{target.label}</option>)}
           </optgroup>
         ) : null}

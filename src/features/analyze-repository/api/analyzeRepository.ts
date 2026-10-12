@@ -1,3 +1,4 @@
+import i18n from 'i18next'
 import { apiClient } from '../../../shared/api/apiClient'
 import { parseGitHubRepositoryUrl } from '../utils/normalizeGitHubRepositoryUrl'
 
@@ -41,7 +42,7 @@ export type DeveloperGroups = string[][]
 
 export async function analyzeRepository(repositoryUrl: string, groups: DeveloperGroups = []): Promise<RepositoryAnalysis> {
   const repository = parseGitHubRepositoryUrl(repositoryUrl)
-  if (!repository) throw new Error('A URL do repositório GitHub é inválida.')
+  if (!repository) throw new Error(i18n.t('errors.invalidRepositoryUrl', { ns: 'analyzeRepository' }))
 
   const [repositoryResult, miningResponse, truckFactorResponse] = await Promise.allSettled([
     apiClient.get<RepositoryInfo>(`/repo/${repository.owner}/${repository.repository}`),

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
 import type { Developer } from '../../api/developers'
 import type { Person, PersonHint } from '../../utils/people'
 import type { MoveTargets } from './IdentityRow'
@@ -18,6 +19,7 @@ type OthersListProps = {
 }
 
 export function OthersList({ developersById, hints, moveTargets, nameOf, onMerge, onMove, people }: OthersListProps) {
+  const { t } = useTranslation('reviewDevelopers')
   const [query, setQuery] = useState('')
   const [limit, setLimit] = useState(PAGE_SIZE)
 
@@ -33,7 +35,7 @@ export function OthersList({ developersById, hints, moveTargets, nameOf, onMerge
   return (
     <Wrapper>
       {people.length > PAGE_SIZE ? (
-        <Search aria-label="Buscar identidade" onChange={(event) => { setQuery(event.target.value); setLimit(PAGE_SIZE) }} placeholder="Buscar por nome ou e-mail…" type="search" value={query} />
+        <Search aria-label={t('others.searchLabel')} onChange={(event) => { setQuery(event.target.value); setLimit(PAGE_SIZE) }} placeholder={t('others.search')} type="search" value={query} />
       ) : null}
       <List>
         {visible.map((person) => {
@@ -42,10 +44,10 @@ export function OthersList({ developersById, hints, moveTargets, nameOf, onMerge
             <SingleIdentity developer={developer} hints={hints.get(person.id) ?? []} key={person.id} moveTargets={moveTargets} nameOf={nameOf} onMerge={onMerge} onMove={onMove} person={person} />
           ) : null
         })}
-        {matches.length === 0 ? <Empty>Nenhuma identidade encontrada.</Empty> : null}
+        {matches.length === 0 ? <Empty>{t('others.empty')}</Empty> : null}
       </List>
       {matches.length > limit ? (
-        <More onClick={() => setLimit((current) => current + PAGE_SIZE)} type="button">Mostrar mais ({(matches.length - limit).toLocaleString('pt-BR')})</More>
+        <More onClick={() => setLimit((current) => current + PAGE_SIZE)} type="button">{t('others.more', { count: matches.length - limit })}</More>
       ) : null}
     </Wrapper>
   )

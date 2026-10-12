@@ -1,13 +1,15 @@
 import axios from 'axios'
+import i18n from 'i18next'
 import { useEffect, useState } from 'react'
 import { getCoupling, type CouplingFilters, type CouplingReport } from '../api/coupling'
 
 type Result = { error: string | null; key: string; report: CouplingReport | null }
 
 function getErrorMessage(error: unknown) {
-  if (axios.isAxiosError(error) && !error.response) return 'Não foi possível conectar ao servidor. Verifique se o backend está rodando.'
+  const t = i18n.getFixedT(null, 'coupling')
+  if (axios.isAxiosError(error) && !error.response) return t('errors.offline')
   if (axios.isAxiosError(error) && typeof error.response?.data?.detail === 'string') return error.response.data.detail
-  return 'Não foi possível calcular o acoplamento do repositório.'
+  return t('errors.fallback')
 }
 
 // Busca o acoplamento e refaz a busca quando o filtro muda. Mantém o último resultado visível durante a recarga.

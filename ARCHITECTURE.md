@@ -11,9 +11,9 @@ src/
     analysis-dashboard/        # tela de resultados: monta as seções de análise
     truck-factor/              # seção Truck Factor (círculos por desenvolvedor, silos)
     hotspot/                   # seção Hotspots (círculos do branco ao vermelho)
-      api/ hooks/ store/ utils/ views/components/ index.ts
+      api/ hooks/ locales/ store/ utils/ views/components/ index.ts
   shared/                      # código sem conhecimento de domínio
-    api/ components/ hooks/ store/ styles/ utils/
+    api/ components/ hooks/ i18n/ locales/ store/ styles/ utils/
 ```
 
 ## Regras
@@ -25,6 +25,16 @@ src/
 - Estado local permanece na feature; `shared/store` contém apenas primitivas reutilizáveis.
 - O cliente HTTP é compartilhado; chamadas específicas do domínio ficam na feature correspondente.
 - Estilos são implementados com Emotion. Estilos globais ficam em `shared/styles`; estilos de uma tela ou componente ficam no próprio arquivo da feature.
+
+## Textos (i18n)
+
+- Nenhum texto de interface fica no código: rótulos, mensagens, placeholders, `aria-label`, `title` e mensagens de erro vêm de traduções (`i18next` + `react-i18next`).
+- Cada feature é dona do seu namespace em `features/<feature>/locales/<idioma>.ts` (ex.: `pt-BR.ts`); os textos comuns ficam em `shared/locales` (namespace `common`). Os namespaces são registrados em `app/i18n.ts`, que também define o idioma padrão.
+- Nos componentes use `const { t } = useTranslation('<namespace>')`; fora de componentes (hooks, utilitários), `i18n.t(chave, { ns })` ou `i18n.getFixedT(null, '<namespace>')`. Frases com marcação usam `<Trans>`.
+- As chaves são tipadas (`src/i18next.d.ts`): chave inexistente falha no build. Prefira chaves por contexto (`section.title`, `controls.period.label`) a chaves por texto.
+- Singular/plural usam os sufixos `_one`, `_other` e, quando preciso, `_zero`, com `count` (ex.: `units.lines`). Números e porcentagens seguem o idioma ativo: `{{count, number}}` nas traduções e `formatNumber`/`formatPercent` (`shared/i18n/format`) no código.
+- Códigos vindos do backend (ex.: motivos de agrupamento) são traduzidos no front; a mensagem `detail` de erro do backend é exibida como veio.
+- Para adicionar um idioma, crie o mesmo arquivo em cada `locales/` e registre-o em `resources` (`app/i18n.ts`).
 
 ## Ambiente e API
 

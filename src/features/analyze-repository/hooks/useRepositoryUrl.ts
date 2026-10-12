@@ -1,3 +1,4 @@
+import i18n from 'i18next'
 import { useState } from 'react'
 import { normalizeGitHubRepositoryUrl } from '../utils/normalizeGitHubRepositoryUrl'
 
@@ -8,7 +9,7 @@ export function useRepositoryUrl() {
   function validate() {
     const normalizedUrl = normalizeGitHubRepositoryUrl(repositoryUrl)
     if (!normalizedUrl) {
-      setError('Informe uma URL válida de um repositório público do GitHub.')
+      setError(i18n.t('errors.invalidUrl', { ns: 'analyzeRepository' }))
       return null
     }
     setError(null)

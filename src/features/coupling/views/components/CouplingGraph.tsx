@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import { cluster, hierarchy, type HierarchyPointNode } from 'd3-hierarchy'
 import { curveBundle, lineRadial } from 'd3-shape'
+import { useTranslation } from 'react-i18next'
+import { formatPercent } from '../../../../shared/i18n/format'
 import { useSvgZoom } from '../../../../shared/hooks/useSvgZoom'
 import type { CouplingFile, CouplingLink } from '../../api/coupling'
 import { buildFileTree, splitPath, type TreeNode } from '../../utils/fileTree'
@@ -32,10 +34,10 @@ type CouplingGraphProps = {
   selectedLink: CouplingLink | null
 }
 
-const percent = (value: number) => `${Math.round(value * 100)}%`
 const toCartesian = (node: { x: number; y: number }): [number, number] => [node.y * Math.sin(node.x), -node.y * Math.cos(node.x)]
 
 export function CouplingGraph({ files, links, onSelectFile, onSelectLink, revealOnSelect, selectedFile, selectedLink, visibleFiles, visibleLinks }: CouplingGraphProps) {
+  const { t } = useTranslation('coupling')
   const [hoverFile, setHoverFile] = useState<string | null>(null)
   const [hoverLink, setHoverLink] = useState<CouplingLink | null>(null)
 
@@ -136,15 +138,15 @@ export function CouplingGraph({ files, links, onSelectFile, onSelectLink, reveal
 
   return (
     <Wrapper>
-      <Toolbar aria-label="Zoom do mapa">
-        <button aria-label="Aproximar" onClick={zoomIn} title="Aproximar" type="button">+</button>
-        <button aria-label="Afastar" onClick={zoomOut} title="Afastar" type="button">−</button>
-        <button onClick={reset} title="Voltar à visão completa" type="button">Ajustar</button>
+      <Toolbar aria-label={t('toolbar.label')}>
+        <button aria-label={t('toolbar.zoomIn')} onClick={zoomIn} title={t('toolbar.zoomIn')} type="button">+</button>
+        <button aria-label={t('toolbar.zoomOut')} onClick={zoomOut} title={t('toolbar.zoomOut')} type="button">−</button>
+        <button onClick={reset} title={t('toolbar.resetTitle')} type="button">{t('toolbar.reset')}</button>
       </Toolbar>
 
       <Svg
         {...svgProps}
-        aria-label="Mapa de acoplamento: arquivos em círculo, agrupados por pasta, ligados quando mudam juntos. Role para aproximar e arraste para mover."
+        aria-label={t('graph.ariaLabel')}
         onClick={clearSelection}
         ref={svgRef}
         role="img"
@@ -191,7 +193,7 @@ export function CouplingGraph({ files, links, onSelectFile, onSelectLink, reveal
               const isFocus = path === activeFile
               const degree = partnerDegree.get(path)
               const name = splitPath(path).name
-              const labelText = isFocus || degree === undefined ? name : `${path === strongestPartner ? '★ ' : ''}${name} · ${percent(degree)}`
+              const labelText = isFocus || degree === undefined ? name : t(path === strongestPartner ? 'graph.strongestLabel' : 'graph.partnerLabel', { degree: formatPercent(degree), name })
               const labelled = showAllLabels || emphasized
               return (
                 <g
@@ -224,11 +226,11 @@ export function CouplingGraph({ files, links, onSelectFile, onSelectLink, reveal
         </g>
       </Svg>
 
-      <Legend aria-label="Cores por pasta">
+      <Legend aria-label={t('graph.colorsLabel')}>
         {[...folderColors.entries()].map(([folder, color]) => (
           <li key={folder || 'root'}>
             <i style={{ background: color }} />
-            {folder || '(raiz)'}
+            {folder || t('root')}
           </li>
         ))}
       </Legend>
@@ -237,37 +239,36 @@ export function CouplingGraph({ files, links, onSelectFile, onSelectLink, reveal
         {activeLink ? (
           <>
             <strong>{activeLink.source} ↔ {activeLink.target}</strong>
-            <span>
-              {activeLink.commits.toLocaleString('pt-BR')} commits em comum · grau de acoplamento {percent(activeLink.degree)}
-            </span>
-            <span>Quando {splitPath(activeLink.source).name} muda, {splitPath(activeLink.target).name} muda junto em {percent(activeLink.source_confidence)} das vezes.</span>
-            <span>Quando {splitPath(activeLink.target).name} muda, {splitPath(activeLink.source).name} muda junto em {percent(activeLink.target_confidence)} das vezes.</span>
+            <span>{t('graph.linkSummary', { commits: t('units.commits', { count: activeLink.commits }), degree: formatPercent(activeLink.degree) })}</span>
+            <span>{t('graph.linkConfidence', { from: splitPath(activeLink.source).name, percent: formatPercent(activeLink.source_confidence), to: splitPath(activeLink.target).name })}</span>
+            <span>{t('graph.linkConfidence', { from: splitPath(activeLink.target).name, percent: formatPercent(activeLink.target_confidence), to: splitPath(activeLink.source).name })}</span>
           </>
         ) : activeFile ? (
           <>
             <strong>{activeFile}</strong>
             <span>
-              {(fileInfo.get(activeFile)?.revisions ?? 0).toLocaleString('pt-BR')} revisões no período · acoplado a {coupledToActiveFile.length.toLocaleString('pt-BR')} arquivos
+              {t('graph.fileSummary', {
+                coupled: t('units.files', { count: coupledToActiveFile.length }),
+                revisions: t('units.revisions', { count: fileInfo.get(activeFile)?.revisions ?? 0 }),
+              })}
             </span>
             {coupledToActiveFile.slice(0, TOP_COUPLED_SHOWN).map((link, index) => {
               const other = link.source === activeFile ? link.target : link.source
               return (
                 <span key={other}>
-                  {index === 0 ? '★ ' : '↔ '}{other} ({percent(link.degree)}, {link.commits} commits){index === 0 ? ' · acoplamento mais forte' : ''}
+                  {t(index === 0 ? 'graph.strongestLine' : 'graph.partnerLine', {
+                    commits: t('units.commits', { count: link.commits }),
+                    degree: formatPercent(link.degree),
+                    path: other,
+                  })}
                 </span>
               )
             })}
           </>
         ) : revealOnSelect ? (
-          <span>
-            Estes são os arquivos com muitos acoplamentos. Clique em um para ver as ligações dele e os arquivos acoplados; clique de novo (ou no fundo) para escondê-las.
-            Role para aproximar e arraste para mover.
-          </span>
+          <span>{t('graph.hintReveal')}</span>
         ) : (
-          <span>
-            Role para aproximar e arraste para mover. Passe o mouse sobre um arquivo ou uma ligação para ver o acoplamento; clique em uma ligação para dar zoom nela
-            e no fundo para limpar a seleção. Ligações mais grossas e vivas indicam arquivos que mudam mais juntos.
-          </span>
+          <span>{t('graph.hintDefault')}</span>
         )}
       </Details>
     </Wrapper>

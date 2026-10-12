@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
 import { ExpandButton } from '../../../shared/components/ExpandButton'
 import { useExpandable } from '../../../shared/hooks/useExpandable'
 import { expandedOverlay } from '../../../shared/styles/expandable'
@@ -16,6 +17,8 @@ type TruckFactorSectionProps = {
 }
 
 export function TruckFactorSection({ keyDevelopers, tree }: TruckFactorSectionProps) {
+  const { t } = useTranslation('truckFactor')
+  const { t: tCommon } = useTranslation('common')
   const [selected, setSelected] = useState<string | null>(null)
   const [mode, setMode] = useState<CollaborationMode>('collaborated')
   const [soloOnly, setSoloOnly] = useState(false)
@@ -41,15 +44,12 @@ export function TruckFactorSection({ keyDevelopers, tree }: TruckFactorSectionPr
   return (
     <Section>
       <SectionHeader>
-        <h2>Truck Factor</h2>
-        <p>
-          Cada círculo é um arquivo (tamanho = linhas de código), agrupado dentro das pastas que o contêm. Escolha um desenvolvedor para ver os arquivos
-          em que ele atuou e onde o conhecimento está concentrado em uma pessoa só.
-        </p>
+        <h2>{t('section.title')}</h2>
+        <p>{t('section.description')}</p>
       </SectionHeader>
 
       {files.length === 0 ? (
-        <Empty>Nenhum arquivo foi encontrado no histórico deste repositório.</Empty>
+        <Empty>{tCommon('noFiles')}</Empty>
       ) : (
         <>
         <Layout data-expanded={isExpanded || undefined}>

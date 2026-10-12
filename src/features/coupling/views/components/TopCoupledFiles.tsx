@@ -1,4 +1,5 @@
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
 import { splitPath } from '../../utils/fileTree'
 import type { FileStats } from '../../utils/fileStats'
 
@@ -11,6 +12,7 @@ type TopCoupledFilesProps = {
 }
 
 export function TopCoupledFiles({ onSelect, selected, stats }: TopCoupledFilesProps) {
+  const { t } = useTranslation('coupling')
   const top = [...stats.entries()]
     .sort((a, b) => b[1].couplings - a[1].couplings || b[1].strongest - a[1].strongest || a[0].localeCompare(b[0]))
     .slice(0, LIMIT)
@@ -25,11 +27,11 @@ export function TopCoupledFiles({ onSelect, selected, stats }: TopCoupledFilesPr
             <Item aria-pressed={isSelected} onClick={() => onSelect(isSelected ? null : path)} title={path} type="button">
               <span>
                 <strong>{name}</strong>
-                <small>{directory || '(raiz)'}</small>
+                <small>{directory || t('root')}</small>
               </span>
               <em>
                 {fileStats.couplings}
-                <small>{fileStats.couplings === 1 ? 'acoplamento' : 'acoplamentos'}</small>
+                <small>{t('units.couplingsLabel', { count: fileStats.couplings })}</small>
               </em>
             </Item>
           </li>

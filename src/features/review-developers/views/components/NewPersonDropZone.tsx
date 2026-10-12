@@ -1,11 +1,13 @@
 import { useDroppable } from '@dnd-kit/core'
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
 import { NEW_PERSON } from '../../utils/people'
 
 export function NewPersonDropZone() {
+  const { t } = useTranslation('reviewDevelopers')
   const { isOver, setNodeRef } = useDroppable({ id: NEW_PERSON })
 
-  return <Zone data-over={isOver || undefined} ref={setNodeRef}>Solte aqui para separar a identidade em uma nova pessoa</Zone>
+  return <Zone data-over={isOver || undefined} ref={setNodeRef}>{t('dropZone')}</Zone>
 }
 
 const Zone = styled.div`

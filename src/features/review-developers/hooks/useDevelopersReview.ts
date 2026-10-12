@@ -1,15 +1,15 @@
 import axios from 'axios'
+import i18n from 'i18next'
 import { useRef, useState } from 'react'
 import { getDevelopers, type DevelopersReview } from '../api/developers'
 
-const fallbackMessage = 'Não foi possível buscar os desenvolvedores do repositório.'
-
 function getErrorMessage(error: unknown) {
-  if (!axios.isAxiosError(error)) return fallbackMessage
-  if (!error.response) return 'Não foi possível conectar ao servidor. Verifique se o backend está rodando.'
+  const t = i18n.getFixedT(null, 'reviewDevelopers')
+  if (!axios.isAxiosError(error)) return t('errors.fallback')
+  if (!error.response) return t('errors.offline')
 
   const detail = error.response.data?.detail
-  return typeof detail === 'string' ? detail : fallbackMessage
+  return typeof detail === 'string' ? detail : t('errors.fallback')
 }
 
 export function useDevelopersReview() {
@@ -29,7 +29,7 @@ export function useDevelopersReview() {
       const result = await getDevelopers(repositoryUrl)
       if (request !== latestRequest.current) return null
       if (result.developers.length === 0) {
-        setError('Nenhum commit encontrado. Confira a URL e se o repositório é público.')
+        setError(i18n.t('errors.noCommits', { ns: 'reviewDevelopers' }))
         return null
       }
       setReview(result)

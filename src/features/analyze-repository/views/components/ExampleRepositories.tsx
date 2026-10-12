@@ -1,4 +1,5 @@
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
 
 const EXAMPLES = ['facebook/react', 'vuejs/core', 'pallets/flask']
 
@@ -8,9 +9,11 @@ type ExampleRepositoriesProps = {
 }
 
 export function ExampleRepositories({ disabled, onSelect }: ExampleRepositoriesProps) {
+  const { t } = useTranslation('analyzeRepository')
+
   return (
     <List>
-      <span>Experimente:</span>
+      <span>{t('examples.label')}</span>
       {EXAMPLES.map((example) => (
         <button disabled={disabled} key={example} onClick={() => onSelect(`https://github.com/${example}`)} type="button">{example}</button>
       ))}
