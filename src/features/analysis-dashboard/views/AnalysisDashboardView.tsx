@@ -1,4 +1,5 @@
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
 import { CouplingSection } from '../../coupling'
 import { HotspotSection } from '../../hotspot'
 import { TruckFactorSection } from '../../truck-factor'
@@ -23,10 +24,12 @@ type AnalysisDashboardViewProps = {
 }
 
 export function AnalysisDashboardView({ keyDevelopers, onBack, repositoryUrl, title, tree }: AnalysisDashboardViewProps) {
+  const { t } = useTranslation('common')
+
   return (
     <Page>
       <Header>
-        <BackButton onClick={onBack} type="button">← Voltar</BackButton>
+        <BackButton onClick={onBack} type="button">{t('back')}</BackButton>
         <h1>{title}</h1>
       </Header>
       <TruckFactorSection keyDevelopers={keyDevelopers} tree={tree} />

@@ -14,6 +14,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
 import type { DevelopersReview } from '../api/developers'
 import {
   buildInitialPeople,
@@ -44,6 +45,8 @@ const collisionDetection: CollisionDetection = (args) => {
 }
 
 export function ReviewDevelopersView({ onBack, onConfirm, review }: ReviewDevelopersViewProps) {
+  const { t } = useTranslation('reviewDevelopers')
+  const { t: tCommon } = useTranslation('common')
   const { developers, suggestedGroups } = review
   const [people, setPeople] = useState(() => buildInitialPeople(developers, suggestedGroups))
   const [activeIdentity, setActiveIdentity] = useState<string | null>(null)
@@ -76,8 +79,8 @@ export function ReviewDevelopersView({ onBack, onConfirm, review }: ReviewDevelo
       const developer = developersById.get(person.identityIds[0])
       return { id: person.id, label: developer ? `${developer.name} <${developer.email}>` : person.id }
     }),
-    unified: united.map((person) => ({ id: person.id, label: `${getPersonName(person, developersById)} (${person.identityIds.length} identidades)` })),
-  }), [developersById, singles, united])
+    unified: united.map((person) => ({ id: person.id, label: t('moveTargets.person', { count: person.identityIds.length, name: getPersonName(person, developersById) }) })),
+  }), [developersById, singles, t, united])
 
   function handleMove(identityId: string, targetId: string) {
     setPeople((current) => moveIdentity(current, identityId, targetId))
@@ -101,19 +104,15 @@ export function ReviewDevelopersView({ onBack, onConfirm, review }: ReviewDevelo
   return (
     <Page>
       <Header>
-        <BackButton onClick={onBack} type="button">← Voltar</BackButton>
-        <h1>Revise os desenvolvedores</h1>
-        <p>
-          O histórico tem {developers.length.toLocaleString('pt-BR')} identidades de commit (nome + e-mail), e a mesma pessoa costuma aparecer mais de uma vez.
-          Cada cartão abaixo é uma pessoa. Arraste uma identidade para outra pessoa para uni-las (ou use o menu "Mover para…"), e aceite as sugestões amarelas se
-          fizerem sentido. Assim a análise não conta a mesma pessoa em duplicidade.
-        </p>
+        <BackButton onClick={onBack} type="button">{tCommon('back')}</BackButton>
+        <h1>{t('title')}</h1>
+        <p>{t('intro', { identities: t('introIdentities', { count: developers.length }) })}</p>
       </Header>
 
       <DndContext collisionDetection={collisionDetection} onDragCancel={() => setActiveIdentity(null)} onDragEnd={handleDragEnd} onDragStart={handleDragStart} sensors={sensors}>
-        <section aria-label="Pessoas com mais de uma identidade">
-          <h2>Pessoas com mais de uma identidade ({united.length})</h2>
-          {united.length === 0 ? <Empty>Nenhuma identidade foi unida automaticamente. Arraste uma identidade sobre outra para uni-las.</Empty> : null}
+        <section aria-label={t('sections.unitedLabel')}>
+          <h2>{t('sections.united', { count: united.length })}</h2>
+          {united.length === 0 ? <Empty>{t('sections.unitedEmpty')}</Empty> : null}
           <Cards>
             {united.map((person) => (
               <PersonCard developersById={developersById} hints={hints.get(person.id) ?? []} key={person.id} moveTargets={moveTargets} nameOf={nameOf} onMerge={handleMerge} onMove={handleMove} person={person} />
@@ -123,8 +122,8 @@ export function ReviewDevelopersView({ onBack, onConfirm, review }: ReviewDevelo
         </section>
 
         {singles.length > 0 ? (
-          <section aria-label="Demais identidades">
-            <h2>Demais identidades ({singles.length.toLocaleString('pt-BR')})</h2>
+          <section aria-label={t('sections.othersLabel')}>
+            <h2>{t('sections.others', { count: singles.length })}</h2>
             <OthersList developersById={developersById} hints={hints} moveTargets={moveTargets} nameOf={nameOf} onMerge={handleMerge} onMove={handleMove} people={singles} />
           </section>
         ) : null}
@@ -134,13 +133,14 @@ export function ReviewDevelopersView({ onBack, onConfirm, review }: ReviewDevelo
 
       <ActionBar>
         <span>
-          {united.length === 0 ? 'Nenhuma identidade será unida.' : `${united.length} ${united.length === 1 ? 'pessoa unida' : 'pessoas unidas'}`}
-          {' · '}
-          {people.length.toLocaleString('pt-BR')} desenvolvedores no total
+          {t('summary.line', {
+            total: t('summary.total', { count: people.length }),
+            united: united.length === 0 ? t('summary.none') : t('summary.united', { count: united.length }),
+          })}
         </span>
         <div>
-          <ResetButton onClick={() => setPeople(buildInitialPeople(developers, suggestedGroups))} type="button">Desfazer alterações</ResetButton>
-          <ConfirmButton onClick={() => onConfirm(toGroups(people))} type="button">Confirmar e analisar</ConfirmButton>
+          <ResetButton onClick={() => setPeople(buildInitialPeople(developers, suggestedGroups))} type="button">{t('actions.reset')}</ResetButton>
+          <ConfirmButton onClick={() => onConfirm(toGroups(people))} type="button">{t('actions.confirm')}</ConfirmButton>
         </div>
       </ActionBar>
     </Page>

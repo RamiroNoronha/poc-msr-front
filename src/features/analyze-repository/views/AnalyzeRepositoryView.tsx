@@ -1,15 +1,12 @@
 import styled from '@emotion/styled'
+import { Trans, useTranslation } from 'react-i18next'
 import type { RepositoryAnalysis } from '../api/analyzeRepository'
 import { useRepositoryUrl } from '../hooks/useRepositoryUrl'
 import { AnalysisSummary } from './components/AnalysisSummary'
 import { ExampleRepositories } from './components/ExampleRepositories'
 import { RepositoryUrlForm } from './components/RepositoryUrlForm'
 
-const FEATURES = [
-  { title: 'Truck Factor', text: 'Quantas pessoas precisam sair para o projeto perder o conhecimento crítico.' },
-  { title: 'Hotspots', text: 'Arquivos com mais revisões e maior concentração de mudanças no histórico.' },
-  { title: 'Autoria', text: 'Quem domina cada parte do código, extraído direto do histórico Git.' },
-]
+const FEATURES = ['truckFactor', 'hotspots', 'authorship'] as const
 
 type AnalyzeRepositoryViewProps = {
   analysis: RepositoryAnalysis | null
@@ -20,6 +17,7 @@ type AnalyzeRepositoryViewProps = {
 }
 
 export function AnalyzeRepositoryView({ analysis, error: requestError, isLoading, onShowDetails, onSubmit }: AnalyzeRepositoryViewProps) {
+  const { t } = useTranslation('analyzeRepository')
   const { error, repositoryUrl, setRepositoryUrl, validate } = useRepositoryUrl()
 
   function handleSubmit() {
@@ -30,27 +28,27 @@ export function AnalyzeRepositoryView({ analysis, error: requestError, isLoading
   return (
     <>
       <Nav>
-        <Brand><Logo aria-hidden="true" />POC-MSR</Brand>
+        <Brand><Logo aria-hidden="true" />{t('brand')}</Brand>
       </Nav>
       <Hero>
-        <Badge>Mining Software Repositories</Badge>
-        <h1>Descubra o <em>risco de conhecimento</em> do seu repositório.</h1>
-        <Description>Cole a URL de um repositório do GitHub e veja Truck Factor, hotspots e concentração de autoria em segundos.</Description>
+        <Badge>{t('badge')}</Badge>
+        <h1><Trans components={{ em: <em /> }} i18nKey="hero.title" ns="analyzeRepository" /></h1>
+        <Description>{t('hero.description')}</Description>
         <RepositoryUrlForm error={error ?? requestError} isLoading={isLoading} onChange={setRepositoryUrl} onSubmit={handleSubmit} value={repositoryUrl} />
         <ExampleRepositories disabled={isLoading} onSelect={setRepositoryUrl} />
         {analysis ? (
           <>
             <AnalysisSummary analysis={analysis} />
-            <DetailsButton onClick={onShowDetails} type="button">Clique aqui para ver mais detalhes →</DetailsButton>
+            <DetailsButton onClick={onShowDetails} type="button">{t('details.button')}</DetailsButton>
           </>
         ) : null}
       </Hero>
       {!analysis ? (
         <Features>
           {FEATURES.map((feature) => (
-            <Feature key={feature.title}>
-              <h2>{feature.title}</h2>
-              <p>{feature.text}</p>
+            <Feature key={feature}>
+              <h2>{t(`features.${feature}.title`)}</h2>
+              <p>{t(`features.${feature}.text`)}</p>
             </Feature>
           ))}
         </Features>

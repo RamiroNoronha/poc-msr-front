@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
 import { OTHERS_COLOR } from '../../utils/developerColors'
 import { splitPath, type FileInfo } from '../../utils/tree'
 
@@ -18,6 +19,7 @@ type Group = { developer: string; files: FileInfo[]; lines: number }
 const risk = (file: FileInfo) => Math.max(file.size, 1) * file.revisions
 
 export function KnowledgeSilos({ colors, onSelectFile, soloFiles, totalFiles }: KnowledgeSilosProps) {
+  const { t } = useTranslation('truckFactor')
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [showAllDevelopers, setShowAllDevelopers] = useState(false)
 
@@ -48,15 +50,12 @@ export function KnowledgeSilos({ colors, onSelectFile, soloFiles, totalFiles }: 
   return (
     <Card>
       <header>
-        <h2>Silos de conhecimento</h2>
-        <p>
-          {soloFiles.length.toLocaleString('pt-BR')} de {totalFiles.toLocaleString('pt-BR')} arquivos ({percentage}%) têm um único colaborador.
-          Em cada grupo, os arquivos estão ordenados por linhas × revisões. Clique em um arquivo para vê-lo no gráfico.
-        </p>
+        <h2>{t('silos.title')}</h2>
+        <p>{t('silos.intro', { count: soloFiles.length, percentage, total: totalFiles })} {t('silos.introDetails')}</p>
       </header>
 
       {groups.length === 0 ? (
-        <Empty>Nenhum arquivo com um único colaborador.</Empty>
+        <Empty>{t('silos.empty')}</Empty>
       ) : (
         <Groups>
           {visibleGroups.map((group) => {
@@ -67,7 +66,7 @@ export function KnowledgeSilos({ colors, onSelectFile, soloFiles, totalFiles }: 
                 <GroupHeader>
                   <Swatch style={{ background: colors.get(group.developer) ?? OTHERS_COLOR }} />
                   <strong>{group.developer}</strong>
-                  <small>{group.files.length.toLocaleString('pt-BR')} arquivos · {group.lines.toLocaleString('pt-BR')} linhas</small>
+                  <small>{t('silos.groupStats', { files: t('units.files', { count: group.files.length }), lines: t('units.lines', { count: group.lines }) })}</small>
                 </GroupHeader>
                 <Files>
                   {files.map((file) => {
@@ -79,7 +78,7 @@ export function KnowledgeSilos({ colors, onSelectFile, soloFiles, totalFiles }: 
                             <strong>{name}</strong>
                             {directory ? <small>{directory}</small> : null}
                           </span>
-                          <em>{file.size.toLocaleString('pt-BR')} linhas · {file.revisions.toLocaleString('pt-BR')} rev.</em>
+                          <em>{t('silos.fileStats', { lines: t('units.lines', { count: file.size }), revisions: t('units.revisionsShort', { count: file.revisions }) })}</em>
                         </FileButton>
                       </li>
                     )
@@ -87,7 +86,7 @@ export function KnowledgeSilos({ colors, onSelectFile, soloFiles, totalFiles }: 
                 </Files>
                 {group.files.length > FILES_PER_DEVELOPER ? (
                   <More onClick={() => toggle(group.developer)} type="button">
-                    {isExpanded ? 'Mostrar menos' : `Mostrar todos (${group.files.length.toLocaleString('pt-BR')})`}
+                    {isExpanded ? t('silos.showLess') : t('silos.showAll', { count: group.files.length })}
                   </More>
                 ) : null}
               </Group>
@@ -95,7 +94,7 @@ export function KnowledgeSilos({ colors, onSelectFile, soloFiles, totalFiles }: 
           })}
           {groups.length > DEVELOPERS_SHOWN ? (
             <More onClick={() => setShowAllDevelopers((current) => !current)} type="button">
-              {showAllDevelopers ? 'Mostrar menos desenvolvedores' : `Mostrar os outros ${groups.length - DEVELOPERS_SHOWN} desenvolvedores`}
+              {showAllDevelopers ? t('silos.lessDevelopers') : t('silos.moreDevelopers', { count: groups.length - DEVELOPERS_SHOWN })}
             </More>
           ) : null}
         </Groups>

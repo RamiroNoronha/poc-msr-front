@@ -1,11 +1,11 @@
 import { useMemo, useState, type MouseEvent, type ReactNode } from 'react'
 import styled from '@emotion/styled'
 import { hierarchy, pack, type HierarchyCircularNode } from 'd3-hierarchy'
+import { useTranslation } from 'react-i18next'
 import { useAnimatedView } from '../hooks/useAnimatedView'
 
 const SIZE = 800
 const CHAR_WIDTH = 6.6
-const DEFAULT_HINT = 'Clique em um círculo para dar zoom e clique fora dele para voltar.'
 
 export type CircleTreeNode = {
   children?: CircleTreeNode[]
@@ -35,8 +35,9 @@ type ZoomableCirclePackProps<T extends CircleTreeNode> = {
   getValue: (leaf: T) => number
   hint?: string
   onFocusChange?: (path: string) => void
+  // Texto do valor de um círculo ou pasta (já com a unidade, no singular/plural certo).
+  formatValue: (value: number) => string
   tree: T
-  valueUnit: string
 }
 
 type PackedNode<T> = HierarchyCircularNode<T>
@@ -56,13 +57,14 @@ function pathOf<T extends CircleTreeNode>(node: PackedNode<T>) {
 export function ZoomableCirclePack<T extends CircleTreeNode>({
   describeLeaf,
   focusPath: controlledFocusPath,
+  formatValue,
   getLeafAppearance,
   getValue,
-  hint = DEFAULT_HINT,
+  hint,
   onFocusChange,
   tree,
-  valueUnit,
 }: ZoomableCirclePackProps<T>) {
+  const { t } = useTranslation('common')
   const [hovered, setHovered] = useState<Hovered<T> | null>(null)
   const [internalFocusPath, setInternalFocusPath] = useState('')
   const focusPath = controlledFocusPath ?? internalFocusPath
@@ -116,17 +118,17 @@ export function ZoomableCirclePack<T extends CircleTreeNode>({
 
   return (
     <Wrapper>
-      <Breadcrumb aria-label="Caminho do zoom">
+      <Breadcrumb aria-label={t('circlePack.breadcrumb')}>
         {trail.map((node, index) => (
           <span key={`${node.data.name}-${index}`}>
             {index > 0 ? <i aria-hidden="true">/</i> : null}
-            <button disabled={node === focus} onClick={() => focusOn(node)} type="button">{index === 0 ? 'raiz' : node.data.name}</button>
+            <button disabled={node === focus} onClick={() => focusOn(node)} type="button">{index === 0 ? t('circlePack.root') : node.data.name}</button>
           </span>
         ))}
-        {focus.parent ? <UpButton onClick={zoomOut} type="button">↑ Subir um nível</UpButton> : null}
+        {focus.parent ? <UpButton onClick={zoomOut} type="button">{t('circlePack.up')}</UpButton> : null}
       </Breadcrumb>
 
-      <Svg aria-label="Círculos aninhados, agrupados pelas pastas" onClick={zoomOut} role="img" viewBox={`0 0 ${SIZE} ${SIZE}`}>
+      <Svg aria-label={t('circlePack.svgLabel')} onClick={zoomOut} role="img" viewBox={`0 0 ${SIZE} ${SIZE}`}>
         {visible.map(({ cx, cy, inFocus, node, path, r }) => {
           const canZoom = inFocus && node !== focus
 
@@ -138,7 +140,7 @@ export function ZoomableCirclePack<T extends CircleTreeNode>({
                 data-zoomable={canZoom || undefined}
                 key={path || 'root'}
                 onClick={handleClick(node)}
-                onMouseEnter={() => setHovered({ files: node.leaves().length, kind: 'folder', path: path || 'raiz do repositório', value: node.value ?? 0 })}
+                onMouseEnter={() => setHovered({ files: node.leaves().length, kind: 'folder', path: path || t('circlePack.rootFolder'), value: node.value ?? 0 })}
                 onMouseLeave={() => setHovered(null)}
                 r={r}
               />
@@ -176,13 +178,13 @@ export function ZoomableCirclePack<T extends CircleTreeNode>({
           <>
             <strong>{hovered.kind === 'folder' ? `📁 ${hovered.path}` : hovered.path}</strong>
             <span>
-              {hovered.value.toLocaleString('pt-BR')} {valueUnit}
-              {hovered.kind === 'folder' ? ` · ${hovered.files.toLocaleString('pt-BR')} arquivos` : ''}
+              {formatValue(hovered.value)}
+              {hovered.kind === 'folder' ? ` · ${t('circlePack.fileCount', { count: hovered.files })}` : ''}
             </span>
             {hovered.kind === 'file' ? describeLeaf?.(hovered) : null}
           </>
         ) : (
-          <span>{hint}</span>
+          <span>{hint ?? t('circlePack.defaultHint')}</span>
         )}
       </Details>
     </Wrapper>

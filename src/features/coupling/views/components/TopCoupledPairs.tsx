@@ -1,4 +1,6 @@
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
+import { formatPercent } from '../../../../shared/i18n/format'
 import type { CouplingLink } from '../../api/coupling'
 import { splitPath } from '../../utils/fileTree'
 
@@ -11,6 +13,7 @@ type TopCoupledPairsProps = {
 }
 
 export function TopCoupledPairs({ links, onSelect, selected }: TopCoupledPairsProps) {
+  const { t } = useTranslation('coupling')
   const top = [...links].sort((a, b) => b.degree - a.degree || b.commits - a.commits).slice(0, LIMIT)
 
   return (
@@ -24,14 +27,14 @@ export function TopCoupledPairs({ links, onSelect, selected }: TopCoupledPairsPr
             <Pair aria-pressed={isSelected} onClick={() => onSelect(isSelected ? null : link)} title={`${link.source} ↔ ${link.target}`} type="button">
               <span>
                 <strong>{source.name}</strong>
-                <small>{source.directory || '(raiz)'}</small>
+                <small>{source.directory || t('root')}</small>
               </span>
               <i aria-hidden="true">↔</i>
               <span>
                 <strong>{target.name}</strong>
-                <small>{target.directory || '(raiz)'}</small>
+                <small>{target.directory || t('root')}</small>
               </span>
-              <em>{Math.round(link.degree * 100)}%</em>
+              <em>{formatPercent(link.degree)}</em>
             </Pair>
           </li>
         )

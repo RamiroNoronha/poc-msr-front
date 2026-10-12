@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
 import { OTHERS_COLOR } from '../../utils/developerColors'
 import type { CollaborationMode, DeveloperSummary } from '../../utils/ownership'
 
@@ -16,12 +17,10 @@ type DeveloperLegendProps = {
   soloOnly: boolean
 }
 
-const MODES: { label: string; value: CollaborationMode }[] = [
-  { label: 'Colaborou no arquivo', value: 'collaborated' },
-  { label: 'É o principal autor do arquivo', value: 'main' },
-]
+const MODES: CollaborationMode[] = ['collaborated', 'main']
 
 export function DeveloperLegend({ colors, developers, keyDevelopers, mode, onModeChange, onSelect, onSoloOnlyChange, selected, soloFileCount, soloOnly }: DeveloperLegendProps) {
+  const { t } = useTranslation('truckFactor')
   const [query, setQuery] = useState('')
   const normalizedQuery = query.trim().toLowerCase()
   const filtered = normalizedQuery ? developers.filter((developer) => developer.name.toLowerCase().includes(normalizedQuery)) : developers
@@ -30,13 +29,13 @@ export function DeveloperLegend({ colors, developers, keyDevelopers, mode, onMod
   return (
     <Panel>
       <Section>
-        <h2>Desenvolvedores ({developers.length})</h2>
+        <h2>{t('legend.title', { count: developers.length })}</h2>
         {developers.length === 0 ? (
-          <Hint>Nenhum desenvolvedor foi identificado neste repositório.</Hint>
+          <Hint>{t('legend.none')}</Hint>
         ) : (
           <>
             {developers.length > 8 ? (
-              <Search aria-label="Buscar desenvolvedor" onChange={(event) => setQuery(event.target.value)} placeholder="Buscar desenvolvedor…" type="search" value={query} />
+              <Search aria-label={t('legend.searchLabel')} onChange={(event) => setQuery(event.target.value)} placeholder={t('legend.search')} type="search" value={query} />
             ) : null}
             <List>
               {filtered.map((developer) => (
@@ -46,20 +45,19 @@ export function DeveloperLegend({ colors, developers, keyDevelopers, mode, onMod
                     <span>
                       <strong>
                         {developer.name}
-                        {keyDevelopers.includes(developer.name) ? <Badge>key</Badge> : null}
+                        {keyDevelopers.includes(developer.name) ? <Badge>{t('legend.keyBadge')}</Badge> : null}
                       </strong>
                       <small>
-                        {developer.files.toLocaleString('pt-BR')} arquivos · {developer.soloFiles.toLocaleString('pt-BR')} só dele
+                        {t('legend.stats', { files: t('units.files', { count: developer.files }), solo: t('legend.soloCount', { count: developer.soloFiles }) })}
                       </small>
                     </span>
                   </Developer>
                 </li>
               ))}
-              {filtered.length === 0 ? <Hint>Nenhum desenvolvedor encontrado.</Hint> : null}
+              {filtered.length === 0 ? <Hint>{t('legend.noneFound')}</Hint> : null}
             </List>
             <Hint>
-              {selected ? 'Clique de novo no desenvolvedor para limpar a seleção.' : 'Sem seleção, cada arquivo usa a cor do desenvolvedor que mais o alterou.'}
-              {hasOthers ? ' Os demais desenvolvedores aparecem em cinza.' : ''}
+              {[selected ? t('legend.hintClear') : t('legend.hintDefault'), hasOthers ? t('legend.hintOthers') : ''].filter(Boolean).join(' ')}
             </Hint>
           </>
         )}
@@ -67,17 +65,17 @@ export function DeveloperLegend({ colors, developers, keyDevelopers, mode, onMod
 
       <Filters>
         <Filter disabled={selected === null}>
-          <legend>Destacar arquivos em que o desenvolvedor</legend>
+          <legend>{t('legend.filterTitle')}</legend>
           {MODES.map((option) => (
-            <label key={option.value}>
-              <input checked={mode === option.value} name="collaboration-mode" onChange={() => onModeChange(option.value)} type="radio" />
-              {option.label}
+            <label key={option}>
+              <input checked={mode === option} name="collaboration-mode" onChange={() => onModeChange(option)} type="radio" />
+              {t(`legend.modes.${option}`)}
             </label>
           ))}
         </Filter>
         <label>
           <input checked={soloOnly} onChange={(event) => onSoloOnlyChange(event.target.checked)} type="checkbox" />
-          Só arquivos com 1 colaborador ({soloFileCount.toLocaleString('pt-BR')})
+          {t('legend.soloOnly', { count: soloFileCount })}
         </label>
       </Filters>
     </Panel>

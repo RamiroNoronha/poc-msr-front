@@ -1,5 +1,6 @@
 import { useDroppable } from '@dnd-kit/core'
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
 import type { Developer } from '../../api/developers'
 import { getPersonCommits, getPersonName, type Person, type PersonHint } from '../../utils/people'
 import { IdentityRow, type MoveTargets } from './IdentityRow'
@@ -16,13 +17,14 @@ type PersonCardProps = {
 }
 
 export function PersonCard({ developersById, hints, moveTargets, nameOf, onMerge, onMove, person }: PersonCardProps) {
+  const { t } = useTranslation('reviewDevelopers')
   const { isOver, setNodeRef } = useDroppable({ id: person.id })
 
   return (
     <Card data-over={isOver || undefined} ref={setNodeRef}>
       <header>
         <h3>{getPersonName(person, developersById)}</h3>
-        <small>{person.identityIds.length} identidades · {getPersonCommits(person, developersById).toLocaleString('pt-BR')} commits</small>
+        <small>{t('person.summary', { commits: t('identity.commits', { count: getPersonCommits(person, developersById) }), identities: t('person.identityCount', { count: person.identityIds.length }) })}</small>
       </header>
       <Rows>
         {person.identityIds.map((id) => {

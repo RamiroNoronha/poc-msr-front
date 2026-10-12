@@ -1,4 +1,5 @@
 import styled from '@emotion/styled'
+import { useTranslation } from 'react-i18next'
 import type { PersonHint } from '../../utils/people'
 import { describeReason } from '../../utils/reasonLabels'
 
@@ -9,6 +10,8 @@ type PersonHintsProps = {
 }
 
 export function PersonHints({ hints, nameOf, onMerge }: PersonHintsProps) {
+  const { t } = useTranslation('reviewDevelopers')
+
   if (hints.length === 0) return null
 
   return (
@@ -16,10 +19,10 @@ export function PersonHints({ hints, nameOf, onMerge }: PersonHintsProps) {
       {hints.map((hint) => (
         <li key={hint.otherId}>
           <span>
-            Pode ser a mesma pessoa que <strong>{nameOf(hint.otherId)}</strong>
+            {t('hints.maybeSame')} <strong>{nameOf(hint.otherId)}</strong>
             <small>{hint.reasons.map(describeReason).join(' · ')}</small>
           </span>
-          <button onClick={() => onMerge(hint.otherId)} type="button">Unir</button>
+          <button onClick={() => onMerge(hint.otherId)} type="button">{t('hints.merge')}</button>
         </li>
       ))}
     </List>
