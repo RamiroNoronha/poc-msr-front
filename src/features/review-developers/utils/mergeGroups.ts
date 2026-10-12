@@ -1,4 +1,4 @@
-import type { SuggestedGroup } from '../api/developers'
+import type { SuggestedGroup } from '../service/contracts'
 
 // Une (por união-busca) os grupos marcados: grupos que compartilham uma identidade viram uma só pessoa.
 export function mergeCheckedGroups(groups: SuggestedGroup[], checked: Set<number>): string[][] {

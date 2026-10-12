@@ -1,4 +1,4 @@
-import type { CouplingLink } from '../api/coupling'
+import type { CouplingLink } from '../service/contracts'
 
 export const linkKey = (link: CouplingLink) => `${link.source}|${link.target}`
 

@@ -1,7 +1,7 @@
 import styled from '@emotion/styled'
 import { useTranslation } from 'react-i18next'
 import { formatNumber } from '../../../../shared/i18n/format'
-import type { RepositoryAnalysis } from '../../api/analyzeRepository'
+import type { RepositoryAnalysis } from '../../service/contracts'
 
 export function AnalysisSummary({ analysis }: { analysis: RepositoryAnalysis }) {
   const { t } = useTranslation('analyzeRepository')

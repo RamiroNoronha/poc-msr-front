@@ -1,4 +1,4 @@
-import type { Developer, SuggestedGroup } from '../api/developers'
+import type { Developer, SuggestedGroup } from '../service/contracts'
 import { mergeCheckedGroups } from './mergeGroups'
 
 // Uma "pessoa" reúne as identidades de commit (nome + e-mail) que o usuário considera a mesma pessoa.

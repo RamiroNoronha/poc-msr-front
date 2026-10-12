@@ -1,5 +1,3 @@
-import { apiClient } from '../../../shared/api/apiClient'
-
 export type CouplingFile = {
   path: string
   revisions: number
@@ -38,11 +36,8 @@ export type CouplingFilters = {
 
 export const COUPLING_LIMITS = [300, 600, 1000]
 
-export async function getCoupling(repositoryUrl: string, filters: CouplingFilters, signal?: AbortSignal): Promise<CouplingReport> {
-  const response = await apiClient.get<CouplingReport>('/analytics/report/coupling', {
-    params: { limit: filters.limit, min_support: filters.minSupport, months: filters.months ?? undefined, repo_url: repositoryUrl },
-    signal,
-  })
-
-  return response.data
+// Pares e arquivos que sobram depois de um filtro aplicado no navegador.
+export type CouplingSelection = {
+  files: CouplingFile[]
+  links: CouplingLink[]
 }

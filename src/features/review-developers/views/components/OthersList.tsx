@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import styled from '@emotion/styled'
 import { useTranslation } from 'react-i18next'
-import type { Developer } from '../../api/developers'
+import type { Developer } from '../../service/contracts'
 import type { Person, PersonHint } from '../../utils/people'
 import type { MoveTargets } from './IdentityRow'
 import { SingleIdentity } from './SingleIdentity'

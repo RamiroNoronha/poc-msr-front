@@ -1,7 +1,7 @@
 import { useDroppable } from '@dnd-kit/core'
 import styled from '@emotion/styled'
 import { useTranslation } from 'react-i18next'
-import type { Developer } from '../../api/developers'
+import type { Developer } from '../../service/contracts'
 import { getPersonCommits, getPersonName, type Person, type PersonHint } from '../../utils/people'
 import { IdentityRow, type MoveTargets } from './IdentityRow'
 import { PersonHints } from './PersonHints'
