@@ -11,7 +11,7 @@ src/
     analysis-dashboard/        # tela de resultados: monta as seções de análise
     truck-factor/              # seção Truck Factor (círculos por desenvolvedor, silos)
     hotspot/                   # seção Hotspots (círculos do branco ao vermelho)
-      hooks/ locales/ service/ store/ utils/ views/components/ index.ts
+      hooks/ locales/ service/ store/ styles/ utils/ views/components/ index.ts
   shared/                      # código sem conhecimento de domínio
     api/ components/ hooks/ i18n/ locales/ store/ styles/ utils/
 ```
@@ -24,7 +24,8 @@ src/
 - `shared` não conhece análise, repositório, GitHub, Truck Factor, hotspot ou regras de negócio. Componentes genéricos (como `ZoomableCirclePack`) recebem dados e comportamento por props.
 - Estado local permanece na feature; `shared/store` contém apenas primitivas reutilizáveis.
 - O cliente HTTP é compartilhado (`shared/api/apiClient.ts`); as chamadas específicas do domínio ficam na feature correspondente, na pasta `service/` (só nas features que falam com a API).
-- Estilos são implementados com Emotion. Estilos globais ficam em `shared/styles`; estilos de uma tela ou componente ficam no próprio arquivo da feature.
+- Estilos são implementados com Emotion. Os componentes estilizados (`styled`) não ficam no arquivo da view ou do componente: cada um tem o seu `<Componente>.styled.ts` na pasta `styles/` da feature (ex.: `features/coupling/styles/CouplingGraph.styled.ts`); o componente apenas importa o que usa. Para os componentes de `shared/components`, os arquivos ficam em `shared/styles`, junto dos estilos globais (`GlobalStyles`) e de trechos reutilizáveis (`expandable`).
+- Valores usados só pelos estilos (como uma constante de tamanho de fonte) ficam no `.styled.ts` e são exportados dali, se o componente também precisar deles.
 
 ## Dados e API (`service/` + TanStack Query)
 
