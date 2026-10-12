@@ -4,8 +4,9 @@ import { Trans, useTranslation } from 'react-i18next'
 import { ExpandButton } from '../../../shared/components/ExpandButton'
 import { useExpandable } from '../../../shared/hooks/useExpandable'
 import { expandedOverlay } from '../../../shared/styles/expandable'
-import { COUPLING_LIMITS, type CouplingFilters, type CouplingLink } from '../api/coupling'
+import { COUPLING_LIMITS, type CouplingFilters, type CouplingLink, type CouplingSelection } from '../service/contracts'
 import { useCoupling } from '../hooks/useCoupling'
+import { couplingManager } from '../service'
 import { computeFileStats, computeVisibility } from '../utils/fileStats'
 import { CouplingGraph } from './components/CouplingGraph'
 import { TopCoupledFiles } from './components/TopCoupledFiles'
@@ -18,6 +19,8 @@ const DEGREES = [0, 5, 10, 15, 20, 30]
 const HUBS = [0, 5, 10, 15, 20, 30]
 
 type Tab = 'files' | 'pairs'
+
+const EMPTY_SELECTION: CouplingSelection = { files: [], links: [] }
 
 export function CouplingSection({ repositoryUrl }: { repositoryUrl: string }) {
   const { t } = useTranslation('coupling')
@@ -32,11 +35,7 @@ export function CouplingSection({ repositoryUrl }: { repositoryUrl: string }) {
   const { isExpanded, toggle } = useExpandable()
   const { error, isLoading, report } = useCoupling(repositoryUrl, filters)
 
-  const links = useMemo(() => (report?.links ?? []).filter((link) => link.degree * 100 >= minDegree), [minDegree, report])
-  const files = useMemo(() => {
-    const paths = new Set(links.flatMap((link) => [link.source, link.target]))
-    return (report?.files ?? []).filter((file) => paths.has(file.path))
-  }, [links, report])
+  const { files, links } = useMemo(() => (report ? couplingManager.filterByDegree(report, minDegree) : EMPTY_SELECTION), [minDegree, report])
   const stats = useMemo(() => computeFileStats(links), [links])
   const visibility = useMemo(() => computeVisibility(links, stats, minCouplings, selectedFile, selectedLink), [links, minCouplings, selectedFile, selectedLink, stats])
   const hubCount = useMemo(() => [...stats.values()].filter((fileStats) => fileStats.couplings >= minCouplings).length, [minCouplings, stats])

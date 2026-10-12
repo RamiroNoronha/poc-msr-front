@@ -1,7 +1,7 @@
 import { useDraggable } from '@dnd-kit/core'
 import styled from '@emotion/styled'
 import { useTranslation } from 'react-i18next'
-import type { Developer } from '../../api/developers'
+import type { Developer } from '../../service/contracts'
 import { NEW_PERSON } from '../../utils/people'
 
 export type MoveTarget = { id: string; label: string }

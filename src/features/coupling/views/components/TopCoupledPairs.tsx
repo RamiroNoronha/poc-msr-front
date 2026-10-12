@@ -1,7 +1,7 @@
 import styled from '@emotion/styled'
 import { useTranslation } from 'react-i18next'
 import { formatPercent } from '../../../../shared/i18n/format'
-import type { CouplingLink } from '../../api/coupling'
+import type { CouplingLink } from '../../service/contracts'
 import { splitPath } from '../../utils/fileTree'
 
 const LIMIT = 10

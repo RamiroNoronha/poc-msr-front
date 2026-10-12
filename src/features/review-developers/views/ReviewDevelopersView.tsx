@@ -15,7 +15,7 @@ import {
 } from '@dnd-kit/core'
 import styled from '@emotion/styled'
 import { useTranslation } from 'react-i18next'
-import type { DevelopersReview } from '../api/developers'
+import type { DevelopersReview } from '../service/contracts'
 import {
   buildInitialPeople,
   findHints,

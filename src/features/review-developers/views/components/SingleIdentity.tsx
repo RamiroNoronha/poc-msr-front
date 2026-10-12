@@ -1,6 +1,6 @@
 import { useDroppable } from '@dnd-kit/core'
 import styled from '@emotion/styled'
-import type { Developer } from '../../api/developers'
+import type { Developer } from '../../service/contracts'
 import type { Person, PersonHint } from '../../utils/people'
 import { IdentityRow, type MoveTargets } from './IdentityRow'
 import { PersonHints } from './PersonHints'

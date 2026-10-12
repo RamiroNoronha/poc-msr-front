@@ -1,6 +1,6 @@
 import styled from '@emotion/styled'
 import { Trans, useTranslation } from 'react-i18next'
-import type { RepositoryAnalysis } from '../api/analyzeRepository'
+import type { RepositoryAnalysis } from '../service/contracts'
 import { useRepositoryUrl } from '../hooks/useRepositoryUrl'
 import { AnalysisSummary } from './components/AnalysisSummary'
 import { ExampleRepositories } from './components/ExampleRepositories'

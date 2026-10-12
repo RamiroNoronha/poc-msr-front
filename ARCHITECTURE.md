@@ -11,7 +11,7 @@ src/
     analysis-dashboard/        # tela de resultados: monta as seções de análise
     truck-factor/              # seção Truck Factor (círculos por desenvolvedor, silos)
     hotspot/                   # seção Hotspots (círculos do branco ao vermelho)
-      api/ hooks/ locales/ store/ utils/ views/components/ index.ts
+      hooks/ locales/ service/ store/ utils/ views/components/ index.ts
   shared/                      # código sem conhecimento de domínio
     api/ components/ hooks/ i18n/ locales/ store/ styles/ utils/
 ```
@@ -23,8 +23,24 @@ src/
 - Componentes usados somente por uma feature ficam em `views/components` dela.
 - `shared` não conhece análise, repositório, GitHub, Truck Factor, hotspot ou regras de negócio. Componentes genéricos (como `ZoomableCirclePack`) recebem dados e comportamento por props.
 - Estado local permanece na feature; `shared/store` contém apenas primitivas reutilizáveis.
-- O cliente HTTP é compartilhado; chamadas específicas do domínio ficam na feature correspondente.
+- O cliente HTTP é compartilhado (`shared/api/apiClient.ts`); as chamadas específicas do domínio ficam na feature correspondente, na pasta `service/` (só nas features que falam com a API).
 - Estilos são implementados com Emotion. Estilos globais ficam em `shared/styles`; estilos de uma tela ou componente ficam no próprio arquivo da feature.
+
+## Dados e API (`service/` + TanStack Query)
+
+Cada feature que consome a API tem uma pasta `service/` com três partes:
+
+- `<Feature>Repository` (classe): só chama a API (`apiClient`) e devolve o corpo da resposta. Não valida nem transforma nada.
+- `<Feature>Manager` (classe): recebe o Repository e faz as operações em cima do resultado (validar a entrada, converter para o modelo da tela, filtrar...). Quando não há o que fazer, apenas repassa a chamada.
+- `contracts.ts`: tipos dos dados (e constantes ligadas a eles). `index.ts` cria e exporta a instância do Manager (ex.: `couplingManager`).
+
+Os hooks da feature (`hooks/`) usam o TanStack Query e conversam **só com o Manager**, nunca com o Repository nem com o `apiClient`:
+
+- `useQuery`/`useQueries` para leituras (ex.: `useCoupling`, `useAnalyzeRepository`, que roda três consultas em paralelo e só começa depois do submit).
+- `useMutation` para ações do usuário cujo resultado decide o próximo passo (ex.: `useDevelopersReview`).
+- Os `queryKey`s incluem todos os parâmetros da chamada; o `QueryClient` (`app/queryClient.ts`) define `retry: false`, `refetchOnWindowFocus: false` e `staleTime` de 5 minutos.
+- Os hooks devolvem ao restante da feature dados e mensagens de erro já traduzidas; as views não conhecem o TanStack Query.
+- Repository e Manager são classes (sem estado de React), recebem o `AbortSignal` do TanStack Query e não importam hooks.
 
 ## Textos (i18n)
 

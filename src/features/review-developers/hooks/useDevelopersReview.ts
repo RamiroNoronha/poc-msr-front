@@ -1,10 +1,13 @@
+import { useMutation } from '@tanstack/react-query'
 import axios from 'axios'
 import i18n from 'i18next'
-import { useRef, useState } from 'react'
-import { getDevelopers, type DevelopersReview } from '../api/developers'
+import type { DevelopersReview } from '../service/contracts'
+import { NoCommitsFoundError } from '../service/NoCommitsFoundError'
+import { reviewDevelopersManager } from '../service'
 
 function getErrorMessage(error: unknown) {
   const t = i18n.getFixedT(null, 'reviewDevelopers')
+  if (error instanceof NoCommitsFoundError) return t('errors.noCommits')
   if (!axios.isAxiosError(error)) return t('errors.fallback')
   if (!error.response) return t('errors.offline')
 
@@ -12,35 +15,23 @@ function getErrorMessage(error: unknown) {
   return typeof detail === 'string' ? detail : t('errors.fallback')
 }
 
+// A busca é uma ação do usuário (clicar em "Analisar") cujo resultado decide a próxima tela, por isso é uma mutation.
 export function useDevelopersReview() {
-  const [review, setReview] = useState<DevelopersReview | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const latestRequest = useRef(0)
+  const mutation = useMutation({ mutationFn: (repositoryUrl: string) => reviewDevelopersManager.getDevelopersReview(repositoryUrl) })
 
   // Devolve o resultado (ou null em caso de erro) para quem orquestra o fluxo decidir o próximo passo.
   async function load(repositoryUrl: string): Promise<DevelopersReview | null> {
-    const request = ++latestRequest.current
-    setReview(null)
-    setError(null)
-    setIsLoading(true)
-
     try {
-      const result = await getDevelopers(repositoryUrl)
-      if (request !== latestRequest.current) return null
-      if (result.developers.length === 0) {
-        setError(i18n.t('errors.noCommits', { ns: 'reviewDevelopers' }))
-        return null
-      }
-      setReview(result)
-      return result
-    } catch (requestError) {
-      if (request === latestRequest.current) setError(getErrorMessage(requestError))
+      return await mutation.mutateAsync(repositoryUrl)
+    } catch {
       return null
-    } finally {
-      if (request === latestRequest.current) setIsLoading(false)
     }
   }
 
-  return { error, isLoading, load, review }
+  return {
+    error: mutation.error ? getErrorMessage(mutation.error) : null,
+    isLoading: mutation.isPending,
+    load,
+    review: mutation.data ?? null,
+  }
 }
