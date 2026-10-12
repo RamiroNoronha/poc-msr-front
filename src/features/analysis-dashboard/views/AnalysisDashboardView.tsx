@@ -1,8 +1,8 @@
-import styled from '@emotion/styled'
 import { useTranslation } from 'react-i18next'
 import { CouplingSection } from '../../coupling'
 import { HotspotSection } from '../../hotspot'
 import { TruckFactorSection } from '../../truck-factor'
+import { BackButton, Header, Page } from '../styles/AnalysisDashboardView.styled'
 
 // Tela principal de resultados: monta as seções de análise (cada uma é uma feature) só pela porta pública (index.ts).
 // Árvore de arquivos do relatório de mineração; as seções aceitam este formato (tipagem estrutural).
@@ -38,28 +38,3 @@ export function AnalysisDashboardView({ keyDevelopers, onBack, repositoryUrl, ti
     </Page>
   )
 }
-
-const Page = styled.main`
-  display: grid;
-  gap: 3rem;
-  padding-top: 2rem;
-`
-
-const Header = styled.header`
-  display: grid;
-  gap: 1rem;
-  justify-items: start;
-
-  h1 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.25rem); letter-spacing: -0.03em; word-break: break-word; }
-`
-
-const BackButton = styled.button`
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--text);
-  background: var(--surface);
-  cursor: pointer;
-
-  &:hover { background: var(--surface-strong); }
-`

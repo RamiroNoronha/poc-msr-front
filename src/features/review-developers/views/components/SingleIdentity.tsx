@@ -1,9 +1,9 @@
 import { useDroppable } from '@dnd-kit/core'
-import styled from '@emotion/styled'
 import type { Developer } from '../../service/contracts'
 import type { Person, PersonHint } from '../../utils/people'
 import { IdentityRow, type MoveTargets } from './IdentityRow'
 import { PersonHints } from './PersonHints'
+import { Wrapper } from '../../styles/SingleIdentity.styled'
 
 type SingleIdentityProps = {
   developer: Developer
@@ -26,14 +26,3 @@ export function SingleIdentity({ developer, hints, moveTargets, nameOf, onMerge,
     </Wrapper>
   )
 }
-
-const Wrapper = styled.div`
-  display: grid;
-  gap: 0.4rem;
-  padding: 0.3rem;
-  border: 1px solid transparent;
-  border-radius: 0.9rem;
-  transition: border-color 0.15s, background 0.15s;
-
-  &[data-over] { border-color: var(--accent-2); background: rgba(34, 211, 238, 0.1); }
-`

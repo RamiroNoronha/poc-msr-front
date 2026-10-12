@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import styled from '@emotion/styled'
 import { useTranslation } from 'react-i18next'
 import type { Developer } from '../../service/contracts'
 import type { Person, PersonHint } from '../../utils/people'
 import type { MoveTargets } from './IdentityRow'
 import { SingleIdentity } from './SingleIdentity'
+import { Empty, List, More, Search, Wrapper } from '../../styles/OthersList.styled'
 
 const PAGE_SIZE = 30
 
@@ -52,42 +52,3 @@ export function OthersList({ developersById, hints, moveTargets, nameOf, onMerge
     </Wrapper>
   )
 }
-
-const Wrapper = styled.div`
-  display: grid;
-  gap: 0.75rem;
-`
-
-const List = styled.div`
-  display: grid;
-  gap: 0.15rem;
-`
-
-const Search = styled.input`
-  padding: 0.55rem 0.8rem;
-  border: 1px solid var(--border);
-  border-radius: 0.7rem;
-  color: var(--text);
-  background: var(--surface);
-  font-size: 0.875rem;
-
-  &::placeholder { color: var(--text-muted); }
-`
-
-const More = styled.button`
-  justify-self: start;
-  padding: 0.35rem 0.9rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--text);
-  background: transparent;
-  font-size: 0.8125rem;
-  cursor: pointer;
-
-  &:hover { background: var(--surface-strong); }
-`
-
-const Empty = styled.p`
-  margin: 0;
-  color: var(--text-muted);
-`
