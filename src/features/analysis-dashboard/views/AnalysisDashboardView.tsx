@@ -1,4 +1,5 @@
 import styled from '@emotion/styled'
+import { CouplingSection } from '../../coupling'
 import { HotspotSection } from '../../hotspot'
 import { TruckFactorSection } from '../../truck-factor'
 
@@ -16,11 +17,12 @@ type AnalysisTree = {
 type AnalysisDashboardViewProps = {
   keyDevelopers: string[]
   onBack: () => void
+  repositoryUrl: string
   title: string
   tree: AnalysisTree
 }
 
-export function AnalysisDashboardView({ keyDevelopers, onBack, title, tree }: AnalysisDashboardViewProps) {
+export function AnalysisDashboardView({ keyDevelopers, onBack, repositoryUrl, title, tree }: AnalysisDashboardViewProps) {
   return (
     <Page>
       <Header>
@@ -29,6 +31,7 @@ export function AnalysisDashboardView({ keyDevelopers, onBack, title, tree }: An
       </Header>
       <TruckFactorSection keyDevelopers={keyDevelopers} tree={tree} />
       <HotspotSection tree={tree} />
+      <CouplingSection repositoryUrl={repositoryUrl} />
     </Page>
   )
 }

@@ -63,6 +63,7 @@ export function App() {
             key={analysis.mining.repo_analyzed}
             keyDevelopers={analysis.truckFactor.key_developers}
             onBack={() => changeScreen('home')}
+            repositoryUrl={analysis.mining.repo_analyzed}
             title={analysis.repository?.full_name ?? analysis.mining.repo_analyzed}
             tree={analysis.mining.d3_data}
           />
