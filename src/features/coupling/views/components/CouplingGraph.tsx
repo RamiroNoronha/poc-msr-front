@@ -103,14 +103,13 @@ export function CouplingGraph({ files, links, onSelectFile, onSelectLink, reveal
     return links.filter((link) => link.source === activeFile || link.target === activeFile).sort((a, b) => b.degree - a.degree)
   }, [activeFile, links])
 
-  // Com um arquivo em foco: o grau de cada parceiro e o parceiro mais fortemente acoplado (a lista já vem ordenada por grau).
+  // Com um arquivo em foco: o grau de cada parceiro e o link mais forte (a lista já vem ordenada por grau).
   const partnerDegree = useMemo(
     () => new Map(coupledToActiveFile.map((link) => [link.source === activeFile ? link.target : link.source, link.degree])),
     [activeFile, coupledToActiveFile],
   )
   const strongestLink = coupledToActiveFile[0] ?? null
   const strongestKey = strongestLink ? linkKey(strongestLink) : null
-  const strongestPartner = strongestLink ? (strongestLink.source === activeFile ? strongestLink.target : strongestLink.source) : null
 
   const highlightedFiles = useMemo(() => {
     const set = new Set<string>()
@@ -192,7 +191,7 @@ export function CouplingGraph({ files, links, onSelectFile, onSelectLink, reveal
               const isFocus = path === activeFile
               const degree = partnerDegree.get(path)
               const name = splitPath(path).name
-              const labelText = isFocus || degree === undefined ? name : t(path === strongestPartner ? 'graph.strongestLabel' : 'graph.partnerLabel', { degree: formatPercent(degree), name })
+              const labelText = isFocus || degree === undefined ? name : t('graph.partnerLabel', { degree: formatPercent(degree), name })
               const labelled = showAllLabels || emphasized
               return (
                 <g
@@ -251,11 +250,11 @@ export function CouplingGraph({ files, links, onSelectFile, onSelectLink, reveal
                 revisions: t('units.revisions', { count: fileInfo.get(activeFile)?.revisions ?? 0 }),
               })}
             </span>
-            {coupledToActiveFile.slice(0, TOP_COUPLED_SHOWN).map((link, index) => {
+            {coupledToActiveFile.slice(0, TOP_COUPLED_SHOWN).map((link) => {
               const other = link.source === activeFile ? link.target : link.source
               return (
                 <span key={other}>
-                  {t(index === 0 ? 'graph.strongestLine' : 'graph.partnerLine', {
+                  {t('graph.partnerLine', {
                     commits: t('units.commits', { count: link.commits }),
                     degree: formatPercent(link.degree),
                     path: other,

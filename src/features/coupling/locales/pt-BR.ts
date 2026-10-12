@@ -47,8 +47,6 @@ export default {
     linkSummary: '{{commits}} em comum · grau de acoplamento {{degree}}',
     partnerLabel: '{{name}} · {{degree}}',
     partnerLine: '↔ {{path}} ({{degree}}, {{commits}})',
-    strongestLabel: '★ {{name}} · {{degree}}',
-    strongestLine: '★ {{path}} ({{degree}}, {{commits}}) · acoplamento mais forte',
   },
   messages: {
     calculating: 'Calculando o acoplamento…',
