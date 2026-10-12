@@ -7,7 +7,12 @@ import { Gradient, Legend, Wrapper } from '../../styles/HotspotChart.styled'
 const getLines = (file: FileNode) => file.size ?? 0
 const getAppearance = (_path: string, file: FileNode) => ({ color: heatColor(file.weight ?? 0) })
 
-export function HotspotChart({ tree }: { tree: FileNode }) {
+type HotspotChartProps = {
+  onHideFolder?: (path: string) => void
+  tree: FileNode
+}
+
+export function HotspotChart({ onHideFolder, tree }: HotspotChartProps) {
   const { t } = useTranslation('hotspot')
 
   return (
@@ -18,6 +23,7 @@ export function HotspotChart({ tree }: { tree: FileNode }) {
         getLeafAppearance={getAppearance}
         getValue={getLines}
         hint={t('chart.hint')}
+        onHideFolder={onHideFolder}
         tree={tree}
       />
       <Legend>

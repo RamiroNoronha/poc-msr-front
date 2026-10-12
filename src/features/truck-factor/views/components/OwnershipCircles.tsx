@@ -11,13 +11,14 @@ type OwnershipCirclesProps = {
   fileColors: Map<string, string>
   focusPath: string
   onFocusChange: (path: string) => void
+  onHideFolder?: (path: string) => void
   ownership: Map<string, FileOwnership>
   tree: FileNode
 }
 
 const getLines = (file: FileNode) => file.size ?? 0
 
-export function OwnershipCircles({ dimUncolored, fileColors, focusPath, onFocusChange, ownership, tree }: OwnershipCirclesProps) {
+export function OwnershipCircles({ dimUncolored, fileColors, focusPath, onFocusChange, onHideFolder, ownership, tree }: OwnershipCirclesProps) {
   const { t } = useTranslation('truckFactor')
 
   function describeCollaborators(collaborators: string[]) {
@@ -46,6 +47,7 @@ export function OwnershipCircles({ dimUncolored, fileColors, focusPath, onFocusC
       getValue={getLines}
       hint={t('chart.hint')}
       onFocusChange={onFocusChange}
+      onHideFolder={onHideFolder}
       tree={tree}
     />
   )

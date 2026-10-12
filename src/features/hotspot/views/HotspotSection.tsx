@@ -5,7 +5,12 @@ import { countFiles, type FileNode } from '../utils/tree'
 import { HotspotChart } from './components/HotspotChart'
 import { Card, Empty, Section, SectionHeader } from '../styles/HotspotSection.styled'
 
-export function HotspotSection({ tree }: { tree: FileNode }) {
+type HotspotSectionProps = {
+  onHideFolder?: (path: string) => void
+  tree: FileNode
+}
+
+export function HotspotSection({ onHideFolder, tree }: HotspotSectionProps) {
   const { t } = useTranslation('hotspot')
   const { t: tCommon } = useTranslation('common')
   const { isExpanded, toggle } = useExpandable()
@@ -21,7 +26,7 @@ export function HotspotSection({ tree }: { tree: FileNode }) {
       {hasFiles ? (
         <Card data-expanded={isExpanded || undefined}>
           <ExpandButton isExpanded={isExpanded} onToggle={toggle} />
-          <HotspotChart tree={tree} />
+          <HotspotChart onHideFolder={onHideFolder} tree={tree} />
         </Card>
       ) : (
         <Empty>{tCommon('noFiles')}</Empty>

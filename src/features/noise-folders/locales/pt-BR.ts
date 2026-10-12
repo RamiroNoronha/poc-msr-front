@@ -1,0 +1,30 @@
+export default {
+  bar: {
+    restore: 'Restaurar',
+    restoreAll: 'Restaurar todas',
+    summary_zero: 'Nenhuma pasta oculta da análise',
+    summary_one: '{{count}} pasta oculta da análise',
+    summary_other: '{{count}} pastas ocultas da análise',
+    title: 'Pastas ocultas',
+    toggleClose: 'Fechar',
+    toggleOpen: 'Revisar',
+  },
+  categories: {
+    build: 'artefatos de build',
+    docs: 'documentação ou exemplos',
+    fixtures: 'dados de teste',
+    generated: 'código gerado',
+    tests: 'testes',
+    vendor: 'dependências externas',
+  },
+  files_one: '{{count, number}} arquivo',
+  files_zero: '0 arquivos',
+  files_other: '{{count, number}} arquivos',
+  hint: 'Os números e os gráficos desconsideram estas pastas. O Truck Factor calculado pelo servidor continua incluindo todo o repositório.',
+  reasons: {
+    manual: 'Ocultada por você',
+    name: 'Nome "{{token}}" ({{category}})',
+    similarNames: '{{count, number}} arquivos com nomes e extensões parecidos',
+    writtenOnce: '{{count, number}} arquivos alterados uma única vez',
+  },
+} as const

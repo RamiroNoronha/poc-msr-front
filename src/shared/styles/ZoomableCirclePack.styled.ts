@@ -82,6 +82,31 @@ export const FolderLabel = styled.text`
   pointer-events: none;
 `
 
+export const Menu = styled.div`
+  position: fixed;
+  z-index: 100;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  button {
+    max-width: 22rem;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    border-radius: 0.5rem;
+    color: var(--text);
+    background: transparent;
+    font-size: 0.875rem;
+    text-align: left;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+
+  button:hover { background: var(--surface-strong); }
+`
+
 export const Details = styled.p`
   display: grid;
   gap: 0.15rem;

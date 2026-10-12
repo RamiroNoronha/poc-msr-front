@@ -11,6 +11,7 @@ src/
     analysis-dashboard/        # tela de resultados: monta as seções de análise
     truck-factor/              # seção Truck Factor (círculos por desenvolvedor, silos)
     hotspot/                   # seção Hotspots (círculos do branco ao vermelho)
+    noise-folders/             # detecta e oculta pastas de ruído (testes, fixtures, build...) da análise
       hooks/ locales/ service/ store/ styles/ utils/ views/components/ index.ts
   shared/                      # código sem conhecimento de domínio
     api/ components/ hooks/ i18n/ locales/ store/ styles/ utils/

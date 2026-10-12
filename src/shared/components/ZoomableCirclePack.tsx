@@ -1,8 +1,8 @@
-import { useMemo, useState, type MouseEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type MouseEvent, type ReactNode } from 'react'
 import { hierarchy, pack, type HierarchyCircularNode } from 'd3-hierarchy'
 import { useTranslation } from 'react-i18next'
 import { useAnimatedView } from '../hooks/useAnimatedView'
-import { Breadcrumb, Details, Folder, FolderLabel, Label, Leaf, Svg, UpButton, Wrapper } from '../styles/ZoomableCirclePack.styled'
+import { Breadcrumb, Details, Folder, FolderLabel, Label, Leaf, Menu, Svg, UpButton, Wrapper } from '../styles/ZoomableCirclePack.styled'
 
 const SIZE = 800
 const CHAR_WIDTH = 6.6
@@ -35,12 +35,16 @@ type ZoomableCirclePackProps<T extends CircleTreeNode> = {
   getValue: (leaf: T) => number
   hint?: string
   onFocusChange?: (path: string) => void
+  // Quando informado, permite ocultar uma pasta (botão direito nela ou botão ao lado do zoom).
+  onHideFolder?: (path: string) => void
   // Texto do valor de um círculo ou pasta (já com a unidade, no singular/plural certo).
   formatValue: (value: number) => string
   tree: T
 }
 
 type PackedNode<T> = HierarchyCircularNode<T>
+
+type FolderMenu = { path: string; x: number; y: number }
 
 function truncate(text: string, width: number) {
   const maxChars = Math.floor(width / CHAR_WIDTH)
@@ -62,10 +66,12 @@ export function ZoomableCirclePack<T extends CircleTreeNode>({
   getValue,
   hint,
   onFocusChange,
+  onHideFolder,
   tree,
 }: ZoomableCirclePackProps<T>) {
   const { t } = useTranslation('common')
   const [hovered, setHovered] = useState<Hovered<T> | null>(null)
+  const [menu, setMenu] = useState<FolderMenu | null>(null)
   const [internalFocusPath, setInternalFocusPath] = useState('')
   const focusPath = controlledFocusPath ?? internalFocusPath
   const setFocusPath = onFocusChange ?? setInternalFocusPath
@@ -88,6 +94,35 @@ export function ZoomableCirclePack<T extends CircleTreeNode>({
   function focusOn(node: PackedNode<T>) {
     setHovered(null)
     setFocusPath(pathOf(node))
+  }
+
+  useEffect(() => {
+    if (!menu) return
+    const close = () => setMenu(null)
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') close() }
+    window.addEventListener('click', close)
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      window.removeEventListener('click', close)
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [menu])
+
+  function hideFolder(path: string) {
+    setMenu(null)
+    setHovered(null)
+    // Se a pasta ocultada contém o foco, volta o zoom para o nível de cima.
+    if (focusPath === path || focusPath.startsWith(`${path}/`)) setFocusPath(path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '')
+    onHideFolder?.(path)
+  }
+
+  function openMenu(path: string) {
+    return (event: MouseEvent) => {
+      if (!onHideFolder || !path) return
+      event.preventDefault()
+      event.stopPropagation()
+      setMenu({ path, x: event.clientX, y: event.clientY })
+    }
   }
 
   function zoomOut() {
@@ -126,6 +161,7 @@ export function ZoomableCirclePack<T extends CircleTreeNode>({
           </span>
         ))}
         {focus.parent ? <UpButton onClick={zoomOut} type="button">{t('circlePack.up')}</UpButton> : null}
+        {focus.parent && onHideFolder ? <UpButton onClick={() => hideFolder(focusPath)} type="button">{t('circlePack.hide')}</UpButton> : null}
       </Breadcrumb>
 
       <Svg aria-label={t('circlePack.svgLabel')} onClick={zoomOut} role="img" viewBox={`0 0 ${SIZE} ${SIZE}`}>
@@ -140,6 +176,7 @@ export function ZoomableCirclePack<T extends CircleTreeNode>({
                 data-zoomable={canZoom || undefined}
                 key={path || 'root'}
                 onClick={handleClick(node)}
+                onContextMenu={openMenu(path)}
                 onMouseEnter={() => setHovered({ files: node.leaves().length, kind: 'folder', path: path || t('circlePack.rootFolder'), value: node.value ?? 0 })}
                 onMouseLeave={() => setHovered(null)}
                 r={r}
@@ -182,11 +219,18 @@ export function ZoomableCirclePack<T extends CircleTreeNode>({
               {hovered.kind === 'folder' ? ` · ${t('circlePack.fileCount', { count: hovered.files })}` : ''}
             </span>
             {hovered.kind === 'file' ? describeLeaf?.(hovered) : null}
+            {hovered.kind === 'folder' && onHideFolder && hovered.path !== t('circlePack.rootFolder') ? <span>{t('circlePack.hideHint')}</span> : null}
           </>
         ) : (
           <span>{hint ?? t('circlePack.defaultHint')}</span>
         )}
       </Details>
+
+      {menu ? (
+        <Menu role="menu" style={{ left: menu.x, top: menu.y }}>
+          <button onClick={() => hideFolder(menu.path)} role="menuitem" type="button">{t('circlePack.hideMenu', { path: menu.path })}</button>
+        </Menu>
+      ) : null}
     </Wrapper>
   )
 }

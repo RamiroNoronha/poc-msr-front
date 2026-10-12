@@ -12,10 +12,11 @@ import { ChartCard, Empty, Layout, Section, SectionHeader } from '../styles/Truc
 
 type TruckFactorSectionProps = {
   keyDevelopers: string[]
+  onHideFolder?: (path: string) => void
   tree: FileNode
 }
 
-export function TruckFactorSection({ keyDevelopers, tree }: TruckFactorSectionProps) {
+export function TruckFactorSection({ keyDevelopers, onHideFolder, tree }: TruckFactorSectionProps) {
   const { t } = useTranslation('truckFactor')
   const { t: tCommon } = useTranslation('common')
   const [selected, setSelected] = useState<string | null>(null)
@@ -54,7 +55,7 @@ export function TruckFactorSection({ keyDevelopers, tree }: TruckFactorSectionPr
         <Layout data-expanded={isExpanded || undefined}>
           <ChartCard ref={chartRef}>
             <ExpandButton isExpanded={isExpanded} onToggle={toggle} />
-            <OwnershipCircles dimUncolored={selected !== null || soloOnly} fileColors={fileColors} focusPath={focusPath} onFocusChange={setFocusPath} ownership={ownership} tree={tree} />
+            <OwnershipCircles dimUncolored={selected !== null || soloOnly} fileColors={fileColors} focusPath={focusPath} onFocusChange={setFocusPath} onHideFolder={onHideFolder} ownership={ownership} tree={tree} />
           </ChartCard>
           <DeveloperLegend
             colors={colors}

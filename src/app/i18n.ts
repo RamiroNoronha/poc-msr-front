@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next'
 import analyzeRepository from '../features/analyze-repository/locales/pt-BR'
 import coupling from '../features/coupling/locales/pt-BR'
 import hotspot from '../features/hotspot/locales/pt-BR'
+import noiseFolders from '../features/noise-folders/locales/pt-BR'
 import reviewDevelopers from '../features/review-developers/locales/pt-BR'
 import truckFactor from '../features/truck-factor/locales/pt-BR'
 import common from '../shared/locales/pt-BR'
@@ -12,7 +13,7 @@ import common from '../shared/locales/pt-BR'
 export const DEFAULT_LANGUAGE = 'pt-BR'
 
 export const resources = {
-  [DEFAULT_LANGUAGE]: { analyzeRepository, common, coupling, hotspot, reviewDevelopers, truckFactor },
+  [DEFAULT_LANGUAGE]: { analyzeRepository, common, coupling, hotspot, noiseFolders, reviewDevelopers, truckFactor },
 } as const
 
 void i18n.use(initReactI18next).init({

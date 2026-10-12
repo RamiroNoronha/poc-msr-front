@@ -21,7 +21,14 @@ type Tab = 'files' | 'pairs'
 
 const EMPTY_SELECTION: CouplingSelection = { files: [], links: [] }
 
-export function CouplingSection({ repositoryUrl }: { repositoryUrl: string }) {
+type CouplingSectionProps = {
+  hiddenPaths?: ReadonlySet<string>
+  repositoryUrl: string
+}
+
+const NO_HIDDEN_PATHS: ReadonlySet<string> = new Set()
+
+export function CouplingSection({ hiddenPaths = NO_HIDDEN_PATHS, repositoryUrl }: CouplingSectionProps) {
   const { t } = useTranslation('coupling')
   // Filtros enviados ao backend (refazem o cálculo).
   const [filters, setFilters] = useState<CouplingFilters>({ limit: COUPLING_LIMITS[0], minSupport: 3, months: null })
@@ -34,7 +41,7 @@ export function CouplingSection({ repositoryUrl }: { repositoryUrl: string }) {
   const { isExpanded, toggle } = useExpandable()
   const { error, isLoading, report } = useCoupling(repositoryUrl, filters)
 
-  const { files, links } = useMemo(() => (report ? couplingManager.filterByDegree(report, minDegree) : EMPTY_SELECTION), [minDegree, report])
+  const { files, links } = useMemo(() => (report ? couplingManager.filterByDegree(couplingManager.excludeFolders(report, hiddenPaths), minDegree) : EMPTY_SELECTION), [hiddenPaths, minDegree, report])
   const stats = useMemo(() => computeFileStats(links), [links])
   const visibility = useMemo(() => computeVisibility(links, stats, minCouplings, selectedFile, selectedLink), [links, minCouplings, selectedFile, selectedLink, stats])
   const hubCount = useMemo(() => [...stats.values()].filter((fileStats) => fileStats.couplings >= minCouplings).length, [minCouplings, stats])
