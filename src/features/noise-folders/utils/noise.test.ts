@@ -39,6 +39,22 @@ describe('detectNoiseFolders', () => {
     expect(confidenceOf('cases')).toBe('medium')
   })
 
+  it('não trata código com nome composto como ruído forte ("buildMiddleware" não é "build")', () => {
+    const code: NoiseTree = {
+      name: 'repo',
+      children: [
+        { name: 'src', children: [{ name: 'buildMiddleware', children: [file('index.ts')] }, file('a.ts'), file('b.ts')] },
+        { name: '__snapshots__', children: [file('a.snap')] },
+        { name: 'third-party', children: [file('lib.js')] },
+        { name: 'other', children: [file('c.ts'), file('d.ts'), file('e.ts')] },
+      ],
+    }
+    const scans = scanFolders(code)
+    expect(scans.find((scan) => scan.path === 'src/buildMiddleware')?.confidence).toBeNull()
+    expect(scans.find((scan) => scan.path === '__snapshots__')?.confidence).toBe('high')
+    expect(scans.find((scan) => scan.path === 'third-party')?.confidence).toBe('high')
+  })
+
   it('não confunde "latest" com "test"', () => {
     expect(confidenceOf('latest')).toBeNull()
   })

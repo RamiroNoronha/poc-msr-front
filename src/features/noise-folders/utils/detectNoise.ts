@@ -62,9 +62,13 @@ function matchName(name: string): NameMatch | null {
   const tokens = tokenize(name)
   // `node_modules` vira ["node", "modules"]: "node" sozinho não é ruído.
   if (tokens.includes('node') && tokens.includes('modules')) return { reason: { category: 'vendor', code: 'name', token: name }, strong: true }
+  // `third-party`/`third_party` também é um nome composto de código de terceiros.
+  if (tokens.length === 2 && tokens[0] === 'third' && tokens[1] === 'party') return { reason: { category: 'vendor', code: 'name', token: name }, strong: true }
 
-  for (const token of tokens) {
-    if (token !== 'node' && STRONG_TOKENS[token]) return { reason: { category: STRONG_TOKENS[token], code: 'name', token }, strong: true }
+  // Nome forte só conta quando é o nome inteiro da pasta (`build`, `dist`, `__snapshots__`). Dentro de um
+  // nome composto ele costuma ser verbo ou prefixo de código (`buildMiddleware`, `buildFormatLocale`).
+  if (tokens.length === 1 && tokens[0] !== 'node' && STRONG_TOKENS[tokens[0]]) {
+    return { reason: { category: STRONG_TOKENS[tokens[0]], code: 'name', token: tokens[0] }, strong: true }
   }
   for (const token of tokens) {
     if (SOFT_TOKENS[token]) return { reason: { category: SOFT_TOKENS[token], code: 'name', token }, strong: false }
