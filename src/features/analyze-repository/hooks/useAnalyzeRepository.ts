@@ -45,6 +45,8 @@ export function useAnalyzeRepository() {
   return {
     analysis,
     error: error ? getErrorMessage(error) : null,
+    // Grupos de identidade confirmados: as seções da análise refazem consultas com eles.
+    groups,
     isLoading: repository.isFetching || mining.isFetching || truckFactor.isFetching,
     reset: () => setRequest(null),
     submit: (url: string, developerGroups: DeveloperGroups = []) => setRequest({ groups: developerGroups, repositoryUrl: url }),

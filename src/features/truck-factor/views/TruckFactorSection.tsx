@@ -2,22 +2,30 @@ import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ExpandButton } from '../../../shared/components/ExpandButton'
 import { useExpandable } from '../../../shared/hooks/useExpandable'
+import { useTruckFactor } from '../hooks/useTruckFactor'
 import { assignDeveloperColors, OTHERS_COLOR, SELECTED_OTHER_COLOR } from '../utils/developerColors'
 import { buildOwnership, isSoloFile, selectFileColors, summarizeDevelopers, type CollaborationMode } from '../utils/ownership'
 import { collectFiles, type FileNode } from '../utils/tree'
 import { DeveloperLegend } from './components/DeveloperLegend'
 import { KnowledgeSilos } from './components/KnowledgeSilos'
 import { OwnershipCircles } from './components/OwnershipCircles'
+import { TruckFactorSummary } from './components/TruckFactorSummary'
 import { ChartCard, Empty, Layout, Section, SectionHeader } from '../styles/TruckFactorSection.styled'
 
 type TruckFactorSectionProps = {
-  keyDevelopers: string[]
+  groups: string[][]
+  hiddenPaths: ReadonlySet<string>
+  // Resultado da análise inicial (sem pastas ocultas), usado enquanto o recálculo não chega.
+  initialKeyDevelopers: string[]
   onHideFolder?: (path: string) => void
+  repositoryUrl: string
   tree: FileNode
 }
 
-export function TruckFactorSection({ keyDevelopers, onHideFolder, tree }: TruckFactorSectionProps) {
+export function TruckFactorSection({ groups, hiddenPaths, initialKeyDevelopers, onHideFolder, repositoryUrl, tree }: TruckFactorSectionProps) {
   const { t } = useTranslation('truckFactor')
+  const truckFactor = useTruckFactor({ groups, hiddenPaths, repositoryUrl })
+  const keyDevelopers = truckFactor.report?.key_developers ?? initialKeyDevelopers
   const { t: tCommon } = useTranslation('common')
   const [selected, setSelected] = useState<string | null>(null)
   const [mode, setMode] = useState<CollaborationMode>('collaborated')
@@ -47,6 +55,8 @@ export function TruckFactorSection({ keyDevelopers, onHideFolder, tree }: TruckF
         <h2>{t('section.title')}</h2>
         <p>{t('section.description')}</p>
       </SectionHeader>
+
+      <TruckFactorSummary error={truckFactor.error} excludedFolders={hiddenPaths.size} isLoading={truckFactor.isLoading} report={truckFactor.report} />
 
       {files.length === 0 ? (
         <Empty>{tCommon('noFiles')}</Empty>

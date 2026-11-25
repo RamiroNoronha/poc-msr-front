@@ -60,6 +60,7 @@ export function App() {
         ) : null}
         {analysis && screen === 'details' ? (
           <AnalysisDashboardView
+            groups={analyze.groups}
             key={analysis.mining.repo_analyzed}
             keyDevelopers={analysis.truckFactor.key_developers}
             onBack={() => changeScreen('home')}

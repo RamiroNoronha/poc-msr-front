@@ -18,6 +18,7 @@ type AnalysisTree = {
 }
 
 type AnalysisDashboardViewProps = {
+  groups: string[][]
   keyDevelopers: string[]
   onBack: () => void
   repositoryUrl: string
@@ -25,7 +26,7 @@ type AnalysisDashboardViewProps = {
   tree: AnalysisTree
 }
 
-export function AnalysisDashboardView({ keyDevelopers, onBack, repositoryUrl, title, tree }: AnalysisDashboardViewProps) {
+export function AnalysisDashboardView({ groups, keyDevelopers, onBack, repositoryUrl, title, tree }: AnalysisDashboardViewProps) {
   const { t } = useTranslation('common')
   const hidden = useHiddenFolders(tree)
   const visibleTree = useMemo(() => pruneTree(tree, hidden.hiddenPaths), [hidden.hiddenPaths, tree])
@@ -37,7 +38,14 @@ export function AnalysisDashboardView({ keyDevelopers, onBack, repositoryUrl, ti
         <h1>{title}</h1>
       </Header>
       <HiddenFoldersBar folders={hidden.folders} onRestore={hidden.restore} onRestoreAll={hidden.restoreAll} />
-      <TruckFactorSection keyDevelopers={keyDevelopers} onHideFolder={hidden.hide} tree={visibleTree} />
+      <TruckFactorSection
+        groups={groups}
+        hiddenPaths={hidden.hiddenPaths}
+        initialKeyDevelopers={keyDevelopers}
+        onHideFolder={hidden.hide}
+        repositoryUrl={repositoryUrl}
+        tree={visibleTree}
+      />
       <HotspotSection onHideFolder={hidden.hide} tree={visibleTree} />
       <CouplingSection hiddenPaths={hidden.hiddenPaths} repositoryUrl={repositoryUrl} />
     </Page>

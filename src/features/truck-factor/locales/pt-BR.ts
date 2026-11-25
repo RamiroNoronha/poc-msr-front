@@ -24,6 +24,22 @@ export default {
     stats: '{{files}} · {{solo}}',
     title: 'Desenvolvedores ({{count}})',
   },
+  summary: {
+    errors: {
+      fallback: 'Não foi possível calcular o Truck Factor.',
+      offline: 'Não foi possível conectar ao servidor. Verifique se o backend está rodando.',
+    },
+    files: 'Arquivos considerados',
+    filesValue: '{{count, number}}',
+    keyDevelopers: 'Pessoas críticas (ordem de remoção)',
+    loading: 'Calculando o Truck Factor…',
+    noKeyDevelopers: 'Nenhuma',
+    note_one: 'Calculado com o grau de autoria (DOA) sobre os arquivos que existem hoje, seguindo renomeações, sem a pasta oculta.',
+    note_other: 'Calculado com o grau de autoria (DOA) sobre os arquivos que existem hoje, seguindo renomeações, sem as {{count}} pastas ocultas.',
+    note_zero: 'Calculado com o grau de autoria (DOA) sobre os arquivos que existem hoje, seguindo renomeações.',
+    recalculating: 'Recalculando sem as pastas ocultas…',
+    truckFactor: 'Truck Factor',
+  },
   section: {
     description: 'Cada círculo é um arquivo (tamanho = linhas de código), agrupado dentro das pastas que o contêm. Escolha um desenvolvedor para ver os arquivos em que ele atuou e onde o conhecimento está concentrado em uma pessoa só.',
     title: 'Truck Factor',
