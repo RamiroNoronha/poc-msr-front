@@ -1,0 +1,18 @@
+# SITE_ADDRESS: o domínio público (ex.: poc-msr.brazilsouth.cloudapp.azure.com). Com um domínio,
+# o Caddy obtém e renova o certificado HTTPS sozinho. Use ":80" para testar sem HTTPS.
+{$SITE_ADDRESS::80} {
+	encode gzip
+
+	# API: encaminhada para o container do backend. O proxy do Caddy não corta respostas demoradas
+	# (a primeira mineração de um repositório grande leva minutos).
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+
+	# Front (SPA): arquivos estáticos, com fallback para o index.html.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}
